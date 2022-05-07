@@ -1,23 +1,125 @@
 package utilities;
 
 import utilities.PastaConstants;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
+import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.kauailabs.navx.frc.AHRS;
+
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+import edu.wpi.first.wpilibj.SPI;
 
 public class CopyPastautonomous
 {
-	public CopyPastautonomous()
+	private final SupplyCurrentLimitConfiguration drivetrainCurrentLimit;
+
+	private final WPI_TalonFX rightMotorFront;
+	private final WPI_TalonFX rightMotorBack;
+	private final WPI_TalonFX leftMotorFront;
+	private final WPI_TalonFX leftMotorBack;
+
+	private final ConfigurablePID drivetrainHeadingPID;
+	private final ConfigurablePID drivetrainSpeedPID;
+
+	private final AHRS navX;
+
+	private double[] pos = { -9999, -9999 };
+
+	private double currentRightMotorPosition;
+	private double currentLeftMotorPosition;
+
+	private double drivePower;
+	private double steeringPower;
+
+	private double currentHeading;
+	private double previousHeading;
+	private double headingError;
+	private double headingRate;
+
+	private double previousRightMotorPosition;
+	private double previousLeftMotorPosition;
+	private double distanceTraveledLeft;
+	private double distanceTraveledRight;
+	private double distanceTraveled;
+	private double distanceError;
+	private double robotX;
+	private double robotY;
+
+	private double targetX;
+	private double targetY;
+	private double targetHeading;
+
+	public CopyPastautonomous(WPI_TalonFX[] driveMotors, ConfigurablePID[] PIDArray, AHRS controlBoard)
+	{
+		this.rightMotorFront = driveMotors[0];
+		this.rightMotorBack = driveMotors[1];
+		this.leftMotorFront = driveMotors[2];
+		this.leftMotorBack = driveMotors[3];
+
+		this.robotY = 0;
+		this.robotX = 0;
+		this.targetX = 0;
+		this.targetY = 0;
+		this.targetHeading = 0;
+
+		this.drivetrainHeadingPID = PIDArray[0];
+
+		this.drivetrainSpeedPID = PIDArray[1];
+
+		this.navX = controlBoard;
+
+		this.drivetrainCurrentLimit = new SupplyCurrentLimitConfiguration(true, Constants.DRIVETRAIN_CURRENT_LIMIT, 0,
+				0);
+
+		this.rightMotorFront.configFactoryDefault();
+		this.rightMotorBack.configFactoryDefault();
+		this.leftMotorFront.configFactoryDefault();
+		this.rightMotorFront.configFactoryDefault();
+
+		this.rightMotorFront.setSensorPhase(false);
+		this.rightMotorBack.setSensorPhase(false);
+		this.leftMotorFront.setSensorPhase(true);
+		this.leftMotorBack.setSensorPhase(true);
+
+		this.rightMotorFront.setInverted(TalonFXInvertType.Clockwise);
+		this.rightMotorBack.setInverted(TalonFXInvertType.Clockwise);
+		this.leftMotorFront.setInverted(TalonFXInvertType.CounterClockwise);
+		this.leftMotorBack.setInverted(TalonFXInvertType.CounterClockwise);
+
+		this.rightMotorFront.setNeutralMode(NeutralMode.Brake);
+		this.rightMotorBack.setNeutralMode(NeutralMode.Brake);
+		this.leftMotorFront.setNeutralMode(NeutralMode.Brake);
+		this.leftMotorBack.setNeutralMode(NeutralMode.Brake);
+
+		this.rightMotorFront.configOpenloopRamp(Constants.DRIVETRAIN_POWER_RAMP_TIME, 0);
+		this.rightMotorBack.configOpenloopRamp(Constants.DRIVETRAIN_POWER_RAMP_TIME, 0);
+		this.leftMotorFront.configOpenloopRamp(Constants.DRIVETRAIN_POWER_RAMP_TIME, 0);
+		this.rightMotorFront.configOpenloopRamp(Constants.DRIVETRAIN_POWER_RAMP_TIME, 0);
+
+		this.rightMotorFront.configSupplyCurrentLimit(drivetrainCurrentLimit);
+		this.rightMotorBack.configSupplyCurrentLimit(drivetrainCurrentLimit);
+		this.leftMotorFront.configSupplyCurrentLimit(drivetrainCurrentLimit);
+		this.rightMotorFront.configSupplyCurrentLimit(drivetrainCurrentLimit);
+
+		this.rightMotorBack.follow(this.rightMotorFront);
+		this.leftMotorBack.follow(this.leftMotorFront);
+
+		this.rightMotorBack.setStatusFramePeriod(1, 255);
+		this.rightMotorBack.setStatusFramePeriod(2, 255);
+		this.leftMotorBack.setStatusFramePeriod(1, 255);
+		this.leftMotorBack.setStatusFramePeriod(2, 255);
+	}
+
+	public void setArcadeDrive(double forward, double turn)
 	{
 
 	}
 
-	public void setTankDriveAuto(double forward, double turn) 
-
-		this.rightMotorFront.set(ControlMode.PercentOutput, forward * Constants.DRIVE_MAX_SPEED,
-				DemandType.ArbitraryFeedForward, -turn * (Constants.DRIVE_MAX_SPEED * 0.666));
-		this.leftMotorFront.set(ControlMode.PercentOutput, forward * Constants.DRIVE_MAX_SPEED,
-				DemandType.ArbitraryFeedForward, turn * (Constants.DRIVE_MAX_SPEED * 0.666));
-	}
-
-	public void setSwerveDriveAuto(double forward, double turn)
+	public void setSwerveDrive(double forward, double turn)
 	{
 
 	}
@@ -26,12 +128,12 @@ public class CopyPastautonomous
 	{
 	}
 
-	public void driveForwardTo(final double waypointX, final double waypointY)
+	public void driveForwardTo(double waypointX, double waypointY)
 	{
 
 	}
 
-	public void driveBackwardsTo(final double waypointX, final double waypointY)
+	public void driveBackwardsTo(double waypointX, double waypointY)
 	{
 
 	}
@@ -52,13 +154,15 @@ public class CopyPastautonomous
 	 * @return if it has reached a waypoint
 	 * @deprecated
 	 */
-	public boolean setDriveToWaypoint(final double waypointX, final double waypointY, final boolean driveBackwards)
+	public boolean setDriveToWaypoint(double waypointX, double waypointY, boolean driveBackwards)
 	{
 		this.targetX = waypointX;
 		this.targetY = waypointY;
-		if (!driveBackwards) {
+		if (!driveBackwards)
+		{
 			this.targetHeading = Math.toDegrees(Math.atan2(this.targetY - this.robotY, this.targetX - this.robotX));
-		} else {
+		} else
+		{
 			this.targetHeading = Math
 					.toDegrees(Math.atan2(-(this.targetY - this.robotY), -(this.targetX - this.robotX)));
 		}
@@ -73,24 +177,30 @@ public class CopyPastautonomous
 		this.steeringPower = this.drivetrainHeadingPID.runVelocityPID(this.targetHeading, this.currentHeading,
 				this.headingRate);
 
-		if (Math.abs(this.headingError) < Constants.MAX_DRIVE_HEADING_ERROR) {
+		if (Math.abs(this.headingError) < Constants.MAX_DRIVE_HEADING_ERROR)
+		{
 			this.drivePower = this.drivetrainSpeedPID.runPID(0, -this.distanceError);
-			if (driveBackwards) {
+			if (driveBackwards)
+			{
 				this.drivePower = -this.drivePower;
 			}
-		} else {
+		} else
+		{
 			this.drivePower = 0;
 		}
-		if (hasReachedWaypoint()) {
+		if (hasReachedWaypoint())
+		{
 			stopMotors();
-		} else {
+		} else
+		{
 			this.setArcadeDrive(this.drivePower, this.steeringPower);
 		}
 		return hasReachedWaypoint();
 	}
 
-	public boolean pointAtWaypoint(final double waypointX, final double waypointY)
+	public boolean pointAtWaypoint(double waypointX, double waypointY)
 	{
+		return false;
 
 	}
 
