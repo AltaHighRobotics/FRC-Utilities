@@ -42,8 +42,8 @@ public class ConfigurablePID {
     this.speed = speed;
   }
 
-  public double runPID(double setpoint, double processVariable) {
-
+  public double runPID(double setpoint, double processVariable) 
+  {
     this.currentError = setpoint - processVariable;
     this.errorDelta = this.currentError - this.pastError;
     this.pastError = this.currentError;
@@ -57,13 +57,12 @@ public class ConfigurablePID {
     return this.output;
   }
 
-  public double runVelocityPID(double setpoint, double processVariable, double processVariableVelocity) {
-    
+  public double runVelocityPID(double setpoint, double processVariable, double processVariableVelocity) 
+  {
     this.currentError = (setpoint - processVariable) * this.speed;
     this.currentError = this.currentError - processVariableVelocity;
     this.errorDelta = this.currentError - this.pastError;
     this.pastError = this.currentError;
-//
     this.proportional = MathUtil.clamp(this.currentError * this.proportionalGain, -this.maxProportional, this.maxProportional);
     this.integral = MathUtil.clamp(this.integral + (this.currentError * this.integralGain), -this.maxIntegral, this.maxIntegral);
     this.derivitive = MathUtil.clamp(this.errorDelta * this.derivitiveGain, -this.maxDerivitive, this.maxDerivitive);
@@ -78,7 +77,8 @@ public class ConfigurablePID {
    *
    * @return speed
    */
-  public double getSpeed() {
+  public double getSpeed() 
+  {
     return this.speed;
   }
 
@@ -87,7 +87,8 @@ public class ConfigurablePID {
    *
    * @param newSpeed the speed to use in runVelocityPID()
    */
-  public void setSpeed(double newSpeed) {
+  public void setSpeed(double newSpeed) 
+  {
     this.speed = newSpeed;
   }
 
@@ -96,7 +97,8 @@ public class ConfigurablePID {
    *
    * @return minimum output
    */
-  public double getMinOutput() {
+  public double getMinOutput() 
+  {
     return this.minOutput;
   }
 
@@ -105,7 +107,8 @@ public class ConfigurablePID {
    *
    * @param newMinOutput the minimum output of the controller
    */
-  public void setMinOutput(double newMinOutput) {
+  public void setMinOutput(double newMinOutput) 
+  {
     this.minOutput = newMinOutput;
   }
 
@@ -114,7 +117,8 @@ public class ConfigurablePID {
    *
    * @return maximum output
    */
-  public double getMaxOutput() {
+  public double getMaxOutput() 
+  {
     return this.maxOutput;
   }
 
@@ -123,7 +127,8 @@ public class ConfigurablePID {
    *
    * @param newMaxOutput the maximum output of the controller
    */
-  public void setMaxOutput(double newMaxOutput) {
+  public void setMaxOutput(double newMaxOutput) 
+  {
     this.maxOutput = newMaxOutput;
   }
 
@@ -132,7 +137,8 @@ public class ConfigurablePID {
    *
    * @return maximum proportional component
    */
-  public double getMaxProportional() {
+  public double getMaxProportional() 
+  {
     return this.maxProportional;
   }
 
@@ -141,7 +147,8 @@ public class ConfigurablePID {
    *
    * @param newMaxProportional the maximum proportional component
    */
-  public void setMaxProportional(double newMaxProportional) {
+  public void setMaxProportional(double newMaxProportional) 
+  {
     this.maxProportional = newMaxProportional;
   }
 
@@ -150,7 +157,8 @@ public class ConfigurablePID {
    *
    * @return maximum integral component
    */
-  public double getMaxIntegral() {
+  public double getMaxIntegral() 
+  {
     return this.maxIntegral;
   }
 
@@ -159,7 +167,8 @@ public class ConfigurablePID {
    *
    * @param newMaxIntegral the maximum integral component
    */
-  public void setMaxIntegral(double newMaxIntegral) {
+  public void setMaxIntegral(double newMaxIntegral) 
+  {
     this.maxIntegral = newMaxIntegral;
   }
 
@@ -168,7 +177,8 @@ public class ConfigurablePID {
    *
    * @return maximum derivitive component
    */
-  public double getMaxDerivitive() {
+  public double getMaxDerivitive() 
+  {
     return this.maxDerivitive;
   }
 
@@ -177,7 +187,8 @@ public class ConfigurablePID {
    *
    * @param newMaxDerivitive the maximum derivitive component
    */
-  public void setMaxDerivitive(double newMaxDerivitive) {
+  public void setMaxDerivitive(double newMaxDerivitive) 
+  {
     this.maxDerivitive = newMaxDerivitive;
   }
 
@@ -186,7 +197,8 @@ public class ConfigurablePID {
    *
    * @return proportional gain
    */
-  public double getProportionalGain() {
+  public double getProportionalGain() 
+  {
     return this.proportionalGain;
   }
 
@@ -195,7 +207,8 @@ public class ConfigurablePID {
    *
    * @param newProportionalGain the proportional gain
    */
-  public void setProportionalGain(double newProportionalGain) {
+  public void setProportionalGain(double newProportionalGain) 
+  {
     this.proportionalGain = newProportionalGain;
   }
 
@@ -204,7 +217,8 @@ public class ConfigurablePID {
    *
    * @return integral gain
    */
-  public double getIntegralGain() {
+  public double getIntegralGain() 
+  {
     return this.integralGain;
   }
 
@@ -213,7 +227,8 @@ public class ConfigurablePID {
    *
    * @return integral
    */
-  public double getIntegral() {
+  public double getIntegral() 
+  {
     return this.integral;
   }
 
@@ -222,7 +237,8 @@ public class ConfigurablePID {
    *
    * @param newIntegralGain the integral gain
    */
-  public void setIntegralGain(double newIntegralGain) {
+  public void setIntegralGain(double newIntegralGain) 
+  {
     this.integralGain = newIntegralGain;
   }
 
@@ -231,7 +247,8 @@ public class ConfigurablePID {
    *
    * @return derivitive gain
    */
-  public double getDerivitiveGain() {
+  public double getDerivitiveGain() 
+  {
     return this.derivitiveGain;
   }
 
@@ -240,7 +257,8 @@ public class ConfigurablePID {
    *
    * @param newDerivitiveGain the derivitive gain
    */
-  public void setDerivitiveGain(double newDerivitiveGain) {
+  public void setDerivitiveGain(double newDerivitiveGain) 
+  {
     this.derivitiveGain = newDerivitiveGain;
   }
 
@@ -249,14 +267,16 @@ public class ConfigurablePID {
    * 
    * @return last computed error
    */
-  public double getError() {
+  public double getError() 
+  {
     return this.currentError;
   }
 
   /**
    * Reset values to 0.
    */
-  public void resetValues() {
+  public void resetValues() 
+  {
     this.proportional = 0;
     this.integral = 0;
     this.derivitive = 0;
