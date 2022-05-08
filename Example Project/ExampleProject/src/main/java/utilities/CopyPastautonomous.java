@@ -124,8 +124,26 @@ public class CopyPastautonomous
 
 	}
 
-	public void drivetrainPositionIntegration()
+	public void drivetrainPositionIntegration(double leftMotorEncoderPos, double rightMotorEncodePos, double yaw)
 	{
+		currentLeftMotorPosition = leftMotorFront.getSelectedSensorPosition() / PastaConstants.ENCODER_ROTATION_UNITS;
+		currentRightMotorPosition = rightMotorFront.getSelectedSensorPosition() / PastaConstants.ENCODER_ROTATION_UNITS;
+
+		currentHeading = yaw;
+
+		currentHeading = Math.toRadians(currentHeading);
+
+		distanceTraveledLeft = PastaConstants.DRIVETRAIN_ROTATION_DISTANCE_RATIO * PastaConstants.DRIVETRAIN_GEAR_RATIO
+				* (currentLeftMotorPosition - previousLeftMotorPosition);
+		distanceTraveledRight = PastaConstants.DRIVETRAIN_ROTATION_DISTANCE_RATIO * PastaConstants.DRIVETRAIN_GEAR_RATIO
+				* (currentRightMotorPosition - previousRightMotorPosition);
+		distanceTraveled = (distanceTraveledLeft + distanceTraveledRight) / 2;
+
+		previousLeftMotorPosition = currentLeftMotorPosition;
+		previousRightMotorPosition = currentRightMotorPosition;
+
+		robotX = robotX + (Math.cos(currentHeading) * distanceTraveled);
+		robotY = robotY + (Math.sin(currentHeading) * distanceTraveled);
 	}
 
 	public void driveForwardTo(double waypointX, double waypointY)
