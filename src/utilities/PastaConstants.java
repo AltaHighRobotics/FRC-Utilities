@@ -19,9 +19,8 @@ public class PastaConstants
     public static final double DRIVETRAIN_SPEED_MAX_DERIVITIVE = 0;
     public static final int DRIVETRAIN_SPEED_MAX_POWER = 0;
     public static final double DRIVETRAIN_SPEED_SPEED = 0;
-    public static final double ENCODER_ROTATION_UNITS = 0;
-    public static final int DRIVETRAIN_ROTATION_DISTANCE_RATIO = 0;
-    public static final int DRIVETRAIN_GEAR_RATIO = 0;
+    public static final int ENCODER_UNITS_PER_ROTATION = 0;
+    public static final double INCHES_PER_ROTATION = 0;
     public static final double MAX_WAYPOINT_ERROR = 0;
     public static final double MAX_DRIVE_HEADING_ERROR = 0;
 

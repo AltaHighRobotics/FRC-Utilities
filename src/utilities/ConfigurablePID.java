@@ -1,7 +1,5 @@
 package utilities;
 
-import edu.wpi.first.math.MathUtil;
-
 public class ConfigurablePID
 {
 	private double proportionalGain = 0;
@@ -50,14 +48,14 @@ public class ConfigurablePID
 		this.errorDelta = this.currentError - this.pastError;
 		this.pastError = this.currentError;
 
-		this.proportional = MathUtil.clamp(this.currentError * this.proportionalGain, -this.maxProportional,
+		this.proportional = clamp(this.currentError * this.proportionalGain, -this.maxProportional,
 				this.maxProportional);
-		this.integral = MathUtil.clamp(this.integral + (this.currentError * this.integralGain), -this.maxIntegral,
+		this.integral = clamp(this.integral + (this.currentError * this.integralGain), -this.maxIntegral,
 				this.maxIntegral);
-		this.derivitive = MathUtil.clamp(this.errorDelta * this.derivitiveGain, -this.maxDerivitive,
+		this.derivitive = clamp(this.errorDelta * this.derivitiveGain, -this.maxDerivitive,
 				this.maxDerivitive);
 
-		this.output = MathUtil.clamp(this.proportional + this.integral + this.derivitive, this.minOutput,
+		this.output = clamp(this.proportional + this.integral + this.derivitive, this.minOutput,
 				this.maxOutput);
 
 		return this.output;
@@ -69,14 +67,14 @@ public class ConfigurablePID
 		this.currentError = this.currentError - processVariableVelocity;
 		this.errorDelta = this.currentError - this.pastError;
 		this.pastError = this.currentError;
-		this.proportional = MathUtil.clamp(this.currentError * this.proportionalGain, -this.maxProportional,
+		this.proportional = clamp(this.currentError * this.proportionalGain, -this.maxProportional,
 				this.maxProportional);
-		this.integral = MathUtil.clamp(this.integral + (this.currentError * this.integralGain), -this.maxIntegral,
+		this.integral = clamp(this.integral + (this.currentError * this.integralGain), -this.maxIntegral,
 				this.maxIntegral);
-		this.derivitive = MathUtil.clamp(this.errorDelta * this.derivitiveGain, -this.maxDerivitive,
+		this.derivitive = clamp(this.errorDelta * this.derivitiveGain, -this.maxDerivitive,
 				this.maxDerivitive);
 
-		this.output = MathUtil.clamp(this.proportional + this.integral + this.derivitive, this.minOutput,
+		this.output = clamp(this.proportional + this.integral + this.derivitive, this.minOutput,
 				this.maxOutput);
 
 		return this.output;
@@ -292,5 +290,10 @@ public class ConfigurablePID
 		this.derivitive = 0;
 		this.currentError = 0;
 		this.pastError = 0;
+	}
+	
+	public double clamp(double value, double min, double max)
+	{
+		return Math.min(Math.max(value,min),max);
 	}
 }
