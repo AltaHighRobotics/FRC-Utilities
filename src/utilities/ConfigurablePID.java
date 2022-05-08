@@ -4,18 +4,18 @@ public class ConfigurablePID
 {
 	private double proportionalGain = 0;
 	private double integralGain = 0;
-	private double derivitiveGain = 0;
+	private double derivativeGain = 0;
 
 	private double maxProportional = 0;
 	private double maxIntegral = 0;
-	private double maxDerivitive = 0;
+	private double maxderivative = 0;
 
 	private double minOutput = 0;
 	private double maxOutput = 0;
 
 	private double proportional = 0;
 	private double integral = 0;
-	private double derivitive = 0;
+	private double derivative = 0;
 
 	private double currentError = 0;
 	private double pastError = 0;
@@ -25,16 +25,16 @@ public class ConfigurablePID
 
 	private double speed = 1;
 
-	public ConfigurablePID(double proportionalGain, double integralGain, double derivitiveGain, double maxProportional,
-			double maxIntegral, double maxDerivitive, double minOutput, double maxOutput, double speed)
+	public ConfigurablePID(double proportionalGain, double integralGain, double derivativeGain, double maxProportional,
+			double maxIntegral, double maxderivative, double minOutput, double maxOutput, double speed)
 	{
 		this.proportionalGain = proportionalGain;
 		this.integralGain = integralGain;
-		this.derivitiveGain = derivitiveGain;
+		this.derivativeGain = derivativeGain;
 
 		this.maxProportional = maxProportional;
 		this.maxIntegral = maxIntegral;
-		this.maxDerivitive = maxDerivitive;
+		this.maxderivative = maxderivative;
 
 		this.minOutput = minOutput;
 		this.maxOutput = maxOutput;
@@ -52,11 +52,9 @@ public class ConfigurablePID
 				this.maxProportional);
 		this.integral = clamp(this.integral + (this.currentError * this.integralGain), -this.maxIntegral,
 				this.maxIntegral);
-		this.derivitive = clamp(this.errorDelta * this.derivitiveGain, -this.maxDerivitive,
-				this.maxDerivitive);
+		this.derivative = clamp(this.errorDelta * this.derivativeGain, -this.maxderivative, this.maxderivative);
 
-		this.output = clamp(this.proportional + this.integral + this.derivitive, this.minOutput,
-				this.maxOutput);
+		this.output = clamp(this.proportional + this.integral + this.derivative, this.minOutput, this.maxOutput);
 
 		return this.output;
 	}
@@ -71,11 +69,9 @@ public class ConfigurablePID
 				this.maxProportional);
 		this.integral = clamp(this.integral + (this.currentError * this.integralGain), -this.maxIntegral,
 				this.maxIntegral);
-		this.derivitive = clamp(this.errorDelta * this.derivitiveGain, -this.maxDerivitive,
-				this.maxDerivitive);
+		this.derivative = clamp(this.errorDelta * this.derivativeGain, -this.maxderivative, this.maxderivative);
 
-		this.output = clamp(this.proportional + this.integral + this.derivitive, this.minOutput,
-				this.maxOutput);
+		this.output = clamp(this.proportional + this.integral + this.derivative, this.minOutput, this.maxOutput);
 
 		return this.output;
 	}
@@ -181,23 +177,23 @@ public class ConfigurablePID
 	}
 
 	/**
-	 * Get the maximum allowed derivitive component for the controller.
+	 * Get the maximum allowed derivative component for the controller.
 	 *
-	 * @return maximum derivitive component
+	 * @return maximum derivative component
 	 */
-	public double getMaxDerivitive()
+	public double getMaxderivative()
 	{
-		return this.maxDerivitive;
+		return this.maxderivative;
 	}
 
 	/**
-	 * Set the maximum allowed derivitive component for the controller.
+	 * Set the maximum allowed derivative component for the controller.
 	 *
-	 * @param newMaxDerivitive the maximum derivitive component
+	 * @param newMaxderivative the maximum derivative component
 	 */
-	public void setMaxDerivitive(double newMaxDerivitive)
+	public void setMaxderivative(double newMaxderivative)
 	{
-		this.maxDerivitive = newMaxDerivitive;
+		this.maxderivative = newMaxderivative;
 	}
 
 	/**
@@ -251,23 +247,23 @@ public class ConfigurablePID
 	}
 
 	/**
-	 * Get the derivitive gain of the controller.
+	 * Get the derivative gain of the controller.
 	 *
-	 * @return derivitive gain
+	 * @return derivative gain
 	 */
-	public double getDerivitiveGain()
+	public double getderivativeGain()
 	{
-		return this.derivitiveGain;
+		return this.derivativeGain;
 	}
 
 	/**
-	 * Set the derivitive gain of the controller.
+	 * Set the derivative gain of the controller.
 	 *
-	 * @param newDerivitiveGain the derivitive gain
+	 * @param newderivativeGain the derivative gain
 	 */
-	public void setDerivitiveGain(double newDerivitiveGain)
+	public void setderivativeGain(double newderivativeGain)
 	{
-		this.derivitiveGain = newDerivitiveGain;
+		this.derivativeGain = newderivativeGain;
 	}
 
 	/**
@@ -287,13 +283,13 @@ public class ConfigurablePID
 	{
 		this.proportional = 0;
 		this.integral = 0;
-		this.derivitive = 0;
+		this.derivative = 0;
 		this.currentError = 0;
 		this.pastError = 0;
 	}
-	
+
 	public double clamp(double value, double min, double max)
 	{
-		return Math.min(Math.max(value,min),max);
+		return Math.min(Math.max(value, min), max);
 	}
 }
