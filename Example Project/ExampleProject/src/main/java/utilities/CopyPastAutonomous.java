@@ -1,31 +1,11 @@
 package utilities;
 
-import utilities.PastaConstants;
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.DemandType;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
-import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import edu.wpi.first.wpilibj.SPI;
 
-public class CopyPastautonomous
+public class CopyPastAutonomous
 {
-	private final SupplyCurrentLimitConfiguration drivetrainCurrentLimit;
-
-	private final WPI_TalonFX rightMotorFront;
-	private final WPI_TalonFX rightMotorBack;
-	private final WPI_TalonFX leftMotorFront;
-	private final WPI_TalonFX leftMotorBack;
-
 	private final ConfigurablePID drivetrainHeadingPID;
 	private final ConfigurablePID drivetrainSpeedPID;
-
-	private final AHRS navX;
 
 	private double[] pos = { -9999, -9999 };
 
@@ -53,13 +33,8 @@ public class CopyPastautonomous
 	private double targetY;
 	private double targetHeading;
 
-	public CopyPastautonomous(WPI_TalonFX[] driveMotors, ConfigurablePID[] PIDArray, AHRS controlBoard)
+	public CopyPastAutonomous(ConfigurablePID[] PIDArray)
 	{
-		this.rightMotorFront = driveMotors[0];
-		this.rightMotorBack = driveMotors[1];
-		this.leftMotorFront = driveMotors[2];
-		this.leftMotorBack = driveMotors[3];
-
 		this.robotY = 0;
 		this.robotX = 0;
 		this.targetX = 0;
@@ -67,51 +42,7 @@ public class CopyPastautonomous
 		this.targetHeading = 0;
 
 		this.drivetrainHeadingPID = PIDArray[0];
-
 		this.drivetrainSpeedPID = PIDArray[1];
-
-		this.navX = controlBoard;
-
-		this.drivetrainCurrentLimit = new SupplyCurrentLimitConfiguration(true, Constants.DRIVETRAIN_CURRENT_LIMIT, 0,
-				0);
-
-		this.rightMotorFront.configFactoryDefault();
-		this.rightMotorBack.configFactoryDefault();
-		this.leftMotorFront.configFactoryDefault();
-		this.rightMotorFront.configFactoryDefault();
-
-		this.rightMotorFront.setSensorPhase(false);
-		this.rightMotorBack.setSensorPhase(false);
-		this.leftMotorFront.setSensorPhase(true);
-		this.leftMotorBack.setSensorPhase(true);
-
-		this.rightMotorFront.setInverted(TalonFXInvertType.Clockwise);
-		this.rightMotorBack.setInverted(TalonFXInvertType.Clockwise);
-		this.leftMotorFront.setInverted(TalonFXInvertType.CounterClockwise);
-		this.leftMotorBack.setInverted(TalonFXInvertType.CounterClockwise);
-
-		this.rightMotorFront.setNeutralMode(NeutralMode.Brake);
-		this.rightMotorBack.setNeutralMode(NeutralMode.Brake);
-		this.leftMotorFront.setNeutralMode(NeutralMode.Brake);
-		this.leftMotorBack.setNeutralMode(NeutralMode.Brake);
-
-		this.rightMotorFront.configOpenloopRamp(Constants.DRIVETRAIN_POWER_RAMP_TIME, 0);
-		this.rightMotorBack.configOpenloopRamp(Constants.DRIVETRAIN_POWER_RAMP_TIME, 0);
-		this.leftMotorFront.configOpenloopRamp(Constants.DRIVETRAIN_POWER_RAMP_TIME, 0);
-		this.rightMotorFront.configOpenloopRamp(Constants.DRIVETRAIN_POWER_RAMP_TIME, 0);
-
-		this.rightMotorFront.configSupplyCurrentLimit(drivetrainCurrentLimit);
-		this.rightMotorBack.configSupplyCurrentLimit(drivetrainCurrentLimit);
-		this.leftMotorFront.configSupplyCurrentLimit(drivetrainCurrentLimit);
-		this.rightMotorFront.configSupplyCurrentLimit(drivetrainCurrentLimit);
-
-		this.rightMotorBack.follow(this.rightMotorFront);
-		this.leftMotorBack.follow(this.leftMotorFront);
-
-		this.rightMotorBack.setStatusFramePeriod(1, 255);
-		this.rightMotorBack.setStatusFramePeriod(2, 255);
-		this.leftMotorBack.setStatusFramePeriod(1, 255);
-		this.leftMotorBack.setStatusFramePeriod(2, 255);
 	}
 
 	public void setArcadeDrive(double forward, double turn)
@@ -126,8 +57,8 @@ public class CopyPastautonomous
 
 	public void drivetrainPositionIntegration(double leftMotorEncoderPos, double rightMotorEncodePos, double yaw)
 	{
-		currentLeftMotorPosition = leftMotorFront.getSelectedSensorPosition() / PastaConstants.ENCODER_ROTATION_UNITS;
-		currentRightMotorPosition = rightMotorFront.getSelectedSensorPosition() / PastaConstants.ENCODER_ROTATION_UNITS;
+		currentLeftMotorPosition = leftMotorEncoderPos / PastaConstants.ENCODER_ROTATION_UNITS;
+		currentRightMotorPosition = rightMotorEncodePos / PastaConstants.ENCODER_ROTATION_UNITS;
 
 		currentHeading = yaw;
 
@@ -164,7 +95,8 @@ public class CopyPastautonomous
 	}
 
 	/**
-	 * DriveTrain drives to wayPoint specified
+	 * DriveTrain drives to the specified waypoint No longer functions, uses methods
+	 * no longer supported
 	 * 
 	 * @param waypointX
 	 * @param waypointY
@@ -184,7 +116,7 @@ public class CopyPastautonomous
 			this.targetHeading = Math
 					.toDegrees(Math.atan2(-(this.targetY - this.robotY), -(this.targetX - this.robotX)));
 		}
-		this.currentHeading = (double) this.navX.getYaw();
+		// this.currentHeading = (double) this.navX.getYaw();
 		this.headingRate = this.currentHeading - this.previousHeading;
 		this.headingError = this.targetHeading - this.currentHeading;
 		this.previousHeading = this.currentHeading;
@@ -195,7 +127,7 @@ public class CopyPastautonomous
 		this.steeringPower = this.drivetrainHeadingPID.runVelocityPID(this.targetHeading, this.currentHeading,
 				this.headingRate);
 
-		if (Math.abs(this.headingError) < Constants.MAX_DRIVE_HEADING_ERROR)
+		if (Math.abs(this.headingError) < PastaConstants.MAX_DRIVE_HEADING_ERROR)
 		{
 			this.drivePower = this.drivetrainSpeedPID.runPID(0, -this.distanceError);
 			if (driveBackwards)
@@ -208,7 +140,7 @@ public class CopyPastautonomous
 		}
 		if (hasReachedWaypoint())
 		{
-			stopMotors();
+			// stopMotors();
 		} else
 		{
 			this.setArcadeDrive(this.drivePower, this.steeringPower);
@@ -229,23 +161,12 @@ public class CopyPastautonomous
 
 	public boolean hasReachedWaypoint()
 	{
-		return Math.abs(this.distanceError) < Constants.MAX_WAYPOINT_ERROR;
-	}
-
-	public void stopMotors()
-	{
-		this.leftMotorFront.neutralOutput();
-		this.rightMotorFront.neutralOutput();
+		return Math.abs(this.distanceError) < PastaConstants.MAX_WAYPOINT_ERROR;
 	}
 
 	public void setPos(double x, double y)
 	{
 		this.robotX = x;
 		this.robotY = y;
-	}
-
-	public void resetYaw()
-	{
-		this.navX.zeroYaw();
 	}
 }
