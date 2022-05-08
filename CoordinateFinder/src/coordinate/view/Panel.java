@@ -4,6 +4,7 @@ import coordinate.controller.Controller;
 
 import javax.swing.*;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
@@ -29,7 +30,9 @@ public class Panel extends JPanel
 
 	private void setupPanel()
 	{
-
+		this.setPreferredSize(new Dimension(800,600));
+		this.add(xLabel);
+		this.add(yLabel);
 	}
 
 	private void setupLayout()
