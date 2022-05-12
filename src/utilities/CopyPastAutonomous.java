@@ -2,44 +2,52 @@ package utilities;
 
 public class CopyPastAutonomous
 {
-	private final ConfigurablePID drivetrainHeadingPID;
-	private final ConfigurablePID drivetrainSpeedPID;
-
 	private double drivePower;
 	private double steeringPower;
 
-	private double currentHeading;
-	private double previousHeading;
-	private double headingError;
-	private double headingRate;
+	private double heading;
+	private double targetHeading;
+	private double headingWrap;
+	private boolean reverse;
+
+	private vector position;
+	private vector velocity;
+	private vector target;
+	private vector positionError;
+	private double directionToWaypoint;
+	private double directionWrap;
+	private double targetSpeed;
 
 	private vector currentMotorPositions;
 	private vector previousMotorPositions;
 	private vector motorVelocities;
-	private vector velocity;
-	private vector position;
-	private vector positionError;
 
-	private vector target;
-	private double targetHeading;
-	private double targetSpeed;
+	private final ConfigurablePID drivetrainHeadingPID;
+	private final ConfigurablePID drivetrainSpeedPID;
 
 	public CopyPastAutonomous(ConfigurablePID[] PIDArray)
 	{
 		this.drivePower = 0;
 		this.steeringPower = 0;
+		this.heading = 0;
 		this.targetHeading = 0;
+		this.headingWrap = 0;
+		this.reverse = false;
+
 		this.position = new vector(0, 0);
 		this.velocity = new vector(0, 0);
 		this.target = new vector(0, 0);
 		this.positionError = new vector(0, 0);
+		this.directionToWaypoint = 0;
+		this.directionWrap = 0;
+		this.targetSpeed = 0;
+
 		this.currentMotorPositions = new vector(0, 0);
 		this.previousMotorPositions = new vector(0, 0);
 		this.motorVelocities = new vector(0, 0);
-		this.targetSpeed = 0;
 
-		this.drivetrainHeadingPID = PIDArray[0];
-		this.drivetrainSpeedPID = PIDArray[1];
+		this.drivetrainHeadingPID = new ConfigurablePID();
+		this.drivetrainSpeedPID = new ConfigurablePID();
 	}
 
 	/**
@@ -57,9 +65,7 @@ public class CopyPastAutonomous
 	{
 		drivePower = 0;
 		steeringPower = 0;
-		currentHeading = Math.toRadians(yaw);
-		headingRate = currentHeading - previousHeading;
-		previousHeading = currentHeading;
+		heading = Math.toRadians(yaw);
 
 		currentMotorPositions.set(leftMotorEncoderPos / PastaConstants.ENCODER_UNITS_PER_ROTATION,
 				rightMotorEncoderPos / PastaConstants.ENCODER_UNITS_PER_ROTATION);
@@ -68,52 +74,35 @@ public class CopyPastAutonomous
 		motorVelocities.multiply(PastaConstants.INCHES_PER_ROTATION);
 		motorVelocities.average();
 
-		velocity.set((Math.cos(currentHeading) * motorVelocities.average),
-				(Math.sin(currentHeading) * motorVelocities.average));
+		velocity.set((Math.cos(heading) * motorVelocities.average),
+				(Math.sin(heading) * motorVelocities.average));
 		position.add(velocity);
 	}
 
 	/**
 	 * Updates the internal target heading and target speed of the robot. The result
 	 * is based on the currently set waypoint.
+	 * Calling this function will also update the desired motor power levels.
 	 * 
 	 */
-	private void updateTargetHeadingAndSpeed()
+	public void updateTargetHeadingAndSpeed()
 	{
 		positionError = target.getSubtraction(position);
-		targetHeading = Math.atan2(positionError.y, positionError.x);
-		headingError = targetHeading - currentHeading;
-		targetSpeed = Math.cos(headingError) * positionError.magnitude();
-	}
 
-	/**
-	 * Updates the steering and drive throttle levels using the target waypoint.
-	 * 
-	 */
-	public void updateDriveAndSteeringPower()
-	{
-		updateTargetHeadingAndSpeed();
-		steeringPower = drivetrainHeadingPID.runVelocityPID(targetHeading, currentHeading, headingRate);
+		directionToWaypoint = Math.atan2(positionError.y, positionError.x);
+		directionWrap = (((directionToWaypoint - heading - Math.PI)%(Math.PI*2)) + Math.PI);
+
+		targetSpeed = Math.cos(directionWrap) * positionError.magnitude();
 		drivePower = drivetrainSpeedPID.runPID(targetSpeed, motorVelocities.average);
-	}
 
-	/**
-	 * Updates the steering and drive throttle levels using the target waypoint.
-	 * 
-	 * @param invertHeading If this is set to true, the robot will drive backwards
-	 *                      to the waypoint.
-	 */
-	public void updateDriveAndSteeringPower(boolean invertHeading)
-	{
-		updateTargetHeadingAndSpeed();
-		if (invertHeading)
+		targetHeading = directionToWaypoint;
+		if (reverse)
 		{
-			steeringPower = drivetrainHeadingPID.runVelocityPID(targetHeading + Math.PI, currentHeading, headingRate);
-		} else
-		{
-			steeringPower = drivetrainHeadingPID.runVelocityPID(targetHeading, currentHeading, headingRate);
+			targetHeading += Math.PI;
 		}
-		drivePower = drivetrainSpeedPID.runPID(targetSpeed, motorVelocities.average);
+
+		headingWrap = (((targetHeading - heading - Math.PI)%(Math.PI*2)) + Math.PI);
+		steeringPower = drivetrainHeadingPID.runPID(headingWrap, 0);
 	}
 
 	/**
@@ -162,6 +151,16 @@ public class CopyPastAutonomous
 	public vector getPosition()
 	{
 		return position.clone();
+	}
+
+	/**
+	 * Sets the reverse setting of the robot. This value controls if the robot will go to waypoints while driving backwards or forwards.
+	 * 
+	 * @param driveReverse A boolean for if the robot will drive in reverse. When true, it will drive backwards. When false, it will drive forwards.
+	 */
+	public void setReverse(boolean driveReverse)
+	{
+		reverse = driveReverse;
 	}
 
 	/**

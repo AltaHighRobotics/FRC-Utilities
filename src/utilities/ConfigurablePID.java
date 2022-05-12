@@ -6,9 +6,12 @@ public class ConfigurablePID
 	private double integralGain = 0;
 	private double derivativeGain = 0;
 
+	private double minProportional = 0;
 	private double maxProportional = 0;
+	private double minIntegral = 0;
 	private double maxIntegral = 0;
-	private double maxderivative = 0;
+	private double minDerivative = 0;
+	private double maxDerivative = 0;
 
 	private double minOutput = 0;
 	private double maxOutput = 0;
@@ -20,110 +23,104 @@ public class ConfigurablePID
 	private double currentError = 0;
 	private double pastError = 0;
 	private double errorDelta = 0;
+	private double errorTolerance = 0;
+
+	private double pastProcessVariable = 0;
+	private double processVariableVelocity = 0;
 
 	private double output = 0;
 
-	private double speed = 1;
+	private double speed = 0;
 
-	public ConfigurablePID(double proportionalGain, double integralGain, double derivativeGain, double maxProportional,
-			double maxIntegral, double maxderivative, double minOutput, double maxOutput, double speed)
+	public ConfigurablePID() {}
+
+	/**
+	 * Creates a new configurable PID controller with the set gains.
+	 * 
+	 * @param proportionalGain scales the proportional of the error
+	 * @param integralGain scales the integral of the error
+	 * @param derivativeGain scales the derivitive of the error
+	 */
+	public ConfigurablePID(double proportionalGain, double integralGain, double derivativeGain)
 	{
 		this.proportionalGain = proportionalGain;
 		this.integralGain = integralGain;
 		this.derivativeGain = derivativeGain;
-
-		this.maxProportional = maxProportional;
-		this.maxIntegral = maxIntegral;
-		this.maxderivative = maxderivative;
-
-		this.minOutput = minOutput;
-		this.maxOutput = maxOutput;
-
-		this.speed = speed;
 	}
 
+	/**
+	 * Computes a new output based on the setpoint and process variable. If a speed has been set, the output will be based on speed.
+	 * 
+	 * @param setpoint The value that the system should try match the process variable to.
+	 * @param processVariable The measured value from the system that is being controlled.
+	 * @return The computed output to correct the process variable to the setpoint.
+	 */
 	public double runPID(double setpoint, double processVariable)
 	{
-		this.currentError = setpoint - processVariable;
-		this.errorDelta = this.currentError - this.pastError;
-		this.pastError = this.currentError;
+		if (speed != 0)
+		{
+			processVariableVelocity = processVariable - pastProcessVariable;
+			pastProcessVariable = processVariable;
+			currentError = (setpoint - processVariable) * speed;
+			currentError -= processVariableVelocity;
+		}
+		else
+		{
+			currentError = setpoint - processVariable;
+		}
+		if (Math.abs(currentError) < errorTolerance) {
+			resetValues();
+			return 0;
+		}
+		errorDelta = currentError - pastError;
+		pastError = currentError;
 
-		this.proportional = clamp(this.currentError * this.proportionalGain, -this.maxProportional,
-				this.maxProportional);
-		this.integral = clamp(this.integral + (this.currentError * this.integralGain), -this.maxIntegral,
-				this.maxIntegral);
-		this.derivative = clamp(this.errorDelta * this.derivativeGain, -this.maxderivative, this.maxderivative);
+		proportional = currentError * proportionalGain;
+		if (minProportional != 0 || maxProportional != 0)
+		{
+			proportional = clamp(proportional, minProportional, maxProportional);
+		}
 
-		this.output = clamp(this.proportional + this.integral + this.derivative, this.minOutput, this.maxOutput);
+		integral += currentError * integralGain;
+		if (minIntegral != 0 || maxIntegral != 0)
+		{
+			integral = clamp(integral, minIntegral, maxIntegral);
+		}
 
-		return this.output;
-	}
+		derivative = errorDelta * derivativeGain;
+		if (minDerivative != 0 || maxDerivative != 0)
+		{
+			derivative = clamp(derivative, minDerivative, maxDerivative);
+		}
 
-	public double runVelocityPID(double setpoint, double processVariable, double processVariableVelocity)
-	{
-		this.currentError = (setpoint - processVariable) * this.speed;
-		this.currentError = this.currentError - processVariableVelocity;
-		this.errorDelta = this.currentError - this.pastError;
-		this.pastError = this.currentError;
-		this.proportional = clamp(this.currentError * this.proportionalGain, -this.maxProportional,
-				this.maxProportional);
-		this.integral = clamp(this.integral + (this.currentError * this.integralGain), -this.maxIntegral,
-				this.maxIntegral);
-		this.derivative = clamp(this.errorDelta * this.derivativeGain, -this.maxderivative, this.maxderivative);
+		output = proportional + integral + derivative;
+		if (minOutput != 0 || maxOutput != 0)
+		{
+			output = clamp(output, minOutput, maxOutput);
+		}
 
-		this.output = clamp(this.proportional + this.integral + this.derivative, this.minOutput, this.maxOutput);
-
-		return this.output;
+		return output;
 	}
 
 	/**
-	 * Get the speed used in runVelocityPID().
+	 * Set the speed used in runPID().
+	 * Once speed has been set to a non-zero number, the controller will use velocity in its calculations.
 	 *
-	 * @return speed
-	 */
-	public double getSpeed()
-	{
-		return this.speed;
-	}
-
-	/**
-	 * Set the speed used in runVelocityPID().
-	 *
-	 * @param newSpeed the speed to use in runVelocityPID()
+	 * @param newSpeed The speed to use in runPID(). This is in units per program run.
 	 */
 	public void setSpeed(double newSpeed)
 	{
-		this.speed = newSpeed;
-	}
-
-	/**
-	 * Get the minimum allowed output for the controller.
-	 *
-	 * @return minimum output
-	 */
-	public double getMinOutput()
-	{
-		return this.minOutput;
+		speed = newSpeed;
 	}
 
 	/**
 	 * Set the minimum allowed output for the controller.
 	 *
-	 * @param newMinOutput the minimum output of the controller
+	 * @param newMinOutput The minimum output of the controller
 	 */
 	public void setMinOutput(double newMinOutput)
 	{
-		this.minOutput = newMinOutput;
-	}
-
-	/**
-	 * Get the maximum allowed output for the controller.
-	 *
-	 * @return maximum output
-	 */
-	public double getMaxOutput()
-	{
-		return this.maxOutput;
+		minOutput = newMinOutput;
 	}
 
 	/**
@@ -133,17 +130,29 @@ public class ConfigurablePID
 	 */
 	public void setMaxOutput(double newMaxOutput)
 	{
-		this.maxOutput = newMaxOutput;
+		maxOutput = newMaxOutput;
 	}
 
 	/**
-	 * Get the maximum allowed proportional component for the controller.
+	 * Set the allowed range of the output of the controller.
 	 *
-	 * @return maximum proportional component
+	 * @param newMinOutput the minimum output
+	 * @param newMaxOutput the maximum output
 	 */
-	public double getMaxProportional()
+	public void setOutputRange(double newMinOutput, double newMaxOutput)
 	{
-		return this.maxProportional;
+		minOutput = newMinOutput;
+		maxOutput = newMaxOutput;
+	}
+
+	/**
+	 * Set the minimum allowed proportional component for the controller.
+	 *
+	 * @param newMinProportional the minimum proportional component
+	 */
+	public void setMinProportional(double newMinProportional)
+	{
+		minProportional = newMinProportional;
 	}
 
 	/**
@@ -153,17 +162,29 @@ public class ConfigurablePID
 	 */
 	public void setMaxProportional(double newMaxProportional)
 	{
-		this.maxProportional = newMaxProportional;
+		maxProportional = newMaxProportional;
 	}
 
 	/**
-	 * Get the maximum allowed integral component for the controller.
+	 * Set the allowed range of the proportional component for the controller.
 	 *
-	 * @return maximum integral component
+	 * @param newMinProportional the minimum proportional component
+	 * @param newMaxProportional the maximum proportional component
 	 */
-	public double getMaxIntegral()
+	public void setProportionalRange(double newMinProportional, double newMaxProportional)
 	{
-		return this.maxIntegral;
+		minProportional = newMinProportional;
+		maxProportional = newMaxProportional;
+	}
+
+	/**
+	 * Set the minimum allowed integral component for the controller.
+	 *
+	 * @param newMinIntegral the minimum integral component
+	 */
+	public void setMinIntegral(double newMinIntegral)
+	{
+		minIntegral = newMinIntegral;
 	}
 
 	/**
@@ -173,37 +194,51 @@ public class ConfigurablePID
 	 */
 	public void setMaxIntegral(double newMaxIntegral)
 	{
-		this.maxIntegral = newMaxIntegral;
+		maxIntegral = newMaxIntegral;
 	}
 
 	/**
-	 * Get the maximum allowed derivative component for the controller.
+	 * Set the allowed range of the integral component for the controller.
 	 *
-	 * @return maximum derivative component
+	 * @param newMinIntegral the minimum integral component
+	 * @param newMaxIntegral the maximum integral component
 	 */
-	public double getMaxderivative()
+	public void setIntegralRange(double newMinIntegral, double newMaxIntegral)
 	{
-		return this.maxderivative;
+		minIntegral = newMinIntegral;
+		maxIntegral = newMaxIntegral;
+	}
+
+	/**
+	 * Set the minimum allowed derivative component for the controller.
+	 *
+	 * @param newMinDerivative the minimum derivative component
+	 */
+	public void setMinderivative(double newMinDerivative)
+	{
+		minDerivative = newMinDerivative;
 	}
 
 	/**
 	 * Set the maximum allowed derivative component for the controller.
 	 *
-	 * @param newMaxderivative the maximum derivative component
+	 * @param newMaxDerivative the maximum derivative component
 	 */
-	public void setMaxderivative(double newMaxderivative)
+	public void setMaxderivative(double newMaxDerivative)
 	{
-		this.maxderivative = newMaxderivative;
+		maxDerivative = newMaxDerivative;
 	}
 
 	/**
-	 * Get the proportional gain of the controller.
+	 * Set the allowed range of the derivative component for the controller.
 	 *
-	 * @return proportional gain
+	 * @param newMinDerivative the minimum derivative component
+	 * @param newMaxDerivative the maximum derivative component
 	 */
-	public double getProportionalGain()
+	public void setDerivativeRange(double newMinDerivative, double newMaxDerivative)
 	{
-		return this.proportionalGain;
+		minDerivative = newMinDerivative;
+		maxDerivative = newMaxDerivative;
 	}
 
 	/**
@@ -213,17 +248,7 @@ public class ConfigurablePID
 	 */
 	public void setProportionalGain(double newProportionalGain)
 	{
-		this.proportionalGain = newProportionalGain;
-	}
-
-	/**
-	 * Get the integral gain of the controller.
-	 *
-	 * @return integral gain
-	 */
-	public double getIntegralGain()
-	{
-		return this.integralGain;
+		proportionalGain = newProportionalGain;
 	}
 
 	/**
@@ -233,7 +258,7 @@ public class ConfigurablePID
 	 */
 	public double getIntegral()
 	{
-		return this.integral;
+		return integral;
 	}
 
 	/**
@@ -243,27 +268,17 @@ public class ConfigurablePID
 	 */
 	public void setIntegralGain(double newIntegralGain)
 	{
-		this.integralGain = newIntegralGain;
-	}
-
-	/**
-	 * Get the derivative gain of the controller.
-	 *
-	 * @return derivative gain
-	 */
-	public double getderivativeGain()
-	{
-		return this.derivativeGain;
+		integralGain = newIntegralGain;
 	}
 
 	/**
 	 * Set the derivative gain of the controller.
 	 *
-	 * @param newderivativeGain the derivative gain
+	 * @param newDerivativeGain the derivative gain
 	 */
-	public void setderivativeGain(double newderivativeGain)
+	public void setderivativeGain(double newDerivativeGain)
 	{
-		this.derivativeGain = newderivativeGain;
+		derivativeGain = newDerivativeGain;
 	}
 
 	/**
@@ -273,22 +288,35 @@ public class ConfigurablePID
 	 */
 	public double getError()
 	{
-		return this.currentError;
+		return currentError;
 	}
 
 	/**
-	 * Reset values to 0.
+	 * Set the allowed error of the controller.
+	 * 
+	 * @param newErrorTolerance When the absolute value of the error is less than this number, 
+	 * the controller will output 0 and reset.
+	 */
+	public void setErrorTolerance(double newErrorTolerance)
+	{
+		errorTolerance = newErrorTolerance;
+	}
+
+	/**
+	 * Reset values to 0. This function should be called whenever the controller stops running.
+	 * This function will be called automatically when running the controller if a tolerance has been configured.
 	 */
 	public void resetValues()
 	{
-		this.proportional = 0;
-		this.integral = 0;
-		this.derivative = 0;
-		this.currentError = 0;
-		this.pastError = 0;
+		proportional = 0;
+		integral = 0;
+		derivative = 0;
+		currentError = 0;
+		pastError = 0;
+		processVariableVelocity = 0;
 	}
 
-	public double clamp(double value, double min, double max)
+	private double clamp(double value, double min, double max)
 	{
 		return Math.min(Math.max(value, min), max);
 	}
