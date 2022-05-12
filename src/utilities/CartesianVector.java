@@ -8,52 +8,74 @@ package utilities;
  * @author Ian
  * @author Icarus Innovated
  */
-public class vector
+public class CartesianVector
 {
+	// The x component of the vector
 	public double x;
+	
+	// The y component of the vector
 	public double y;
+
+	// The z component of the vector. If a vector is created with only two paramaters, this value will remain 0
 	public double z;
+
+	// The direction of the vector, in radians. This is 0 unless the direction function is called.
 	public double direction;
+
+	// The magnitude of the vector. This is 0 unless the magnitude function is called.
 	public double magnitude;
+
+	// The average value of the components of the vector. This is 0 unless the average function is called.
 	public double average;
+	
+	// If the vector is created with 3 values, this will be true. Otherwise, it will be false.
 	public final boolean is3D;
 
 	/**
 	 * Makes a 3D vector object with the specified values.
 	 * 
-	 * @param x A double representing the initial x value.
-	 * @param y A double representing the initial y value.
-	 * @param z A double representing the initial z value.
+	 * @param initialX A double representing the initial x value.
+	 * @param initialY A double representing the initial y value.
+	 * @param initialZ A double representing the initial z value.
 	 */
-	public vector(double x, double y, double z)
+	public CartesianVector(double initialX, double initialY, double initialZ)
 	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
+		this.x = initialX;
+		this.y = initialY;
+		this.z = initialZ;
 		this.is3D = true;
 	}
 
 	/**
 	 * Makes a 2D vector object with the specified values.
 	 * 
-	 * @param x A double representing the initial x value.
-	 * @param y A double representing the initial y value.
+	 * @param initialX A double representing the initial x value.
+	 * @param initialY A double representing the initial y value.
 	 */
-	public vector(double x, double y)
+	public CartesianVector(double initialX, double initialY)
 	{
-		this.x = x;
-		this.y = y;
-		this.z = 0;
-		this.is3D = false;
+		x = initialX;
+		y = initialY;
+		z = 0;
+		is3D = false;
 	}
 
-	private vector vectorType(boolean is3D, double x, double y, double z)
+	/**
+	 * Returns a vector object with the specified values and forces it to match the given type.
+	 * 
+	 * @param force3D If this is false, the input z value will be discarded.
+	 * @param initialX A double representing the initial x value.
+	 * @param initialY A double representing the initial y value.
+	 * @param initialZ A double representing the initial z value.
+	 * @return A vector with the same values as the inputs, and with the same type as the input (2D or 3D).
+	 */
+	private CartesianVector vectorType(boolean force3D, double initialX, double initialY, double initialZ)
 	{
-		if (is3D)
+		if (force3D)
 		{
-			return new vector(x, y, z);
+			return new CartesianVector(initialX, initialY, initialZ);
 		}
-		return new vector(x, y);
+		return new CartesianVector(initialX, initialY);
 	}
 
 	/**
@@ -61,40 +83,40 @@ public class vector
 	 * 
 	 * @param a The vector to be copied.
 	 */
-	public void copy(vector a)
+	public void copy(CartesianVector a)
 	{
-		this.x = a.x;
-		this.y = a.y;
-		if (this.is3D)
+		x = a.x;
+		y = a.y;
+		if (is3D)
 		{
-			this.z = a.z;
+			z = a.z;
 		}
 	}
 
 	/**
 	 * Sets an existing vector to the specified values.
 	 * 
-	 * @param x A double representing the new x value.
-	 * @param y A double representing the new y value.
-	 * @param z A double representing the new z value.
+	 * @param newX A double representing the new x value.
+	 * @param newY A double representing the new y value.
+	 * @param newZ A double representing the new z value.
 	 */
-	public void set(double x, double y, double z)
+	public void set(double newX, double newY, double newZ)
 	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
+		x = newX;
+		y = newY;
+		z = newZ;
 	}
 
 	/**
 	 * Sets an existing vector to the specified values.
 	 * 
-	 * @param x A double representing the new x value.
-	 * @param y A double representing the new y value.
+	 * @param newX A double representing the new x value.
+	 * @param newY A double representing the new y value.
 	 */
-	public void set(double x, double y)
+	public void set(double newX, double newY)
 	{
-		this.x = x;
-		this.y = y;
+		x = newX;
+		y = newY;
 	}
 
 	/**
@@ -102,9 +124,9 @@ public class vector
 	 * 
 	 * @return An exact copy of the initial vector.
 	 */
-	public vector clone()
+	public CartesianVector clone()
 	{
-		return this.vectorType(this.is3D, this.x, this.y, this.z);
+		return vectorType(is3D, x, y, z);
 	}
 
 	/**
@@ -115,9 +137,9 @@ public class vector
 	 * @return A new vector containing the result of the addition. The result will
 	 *         be the same type as the parent (2D or 3D).
 	 */
-	public vector getAddition(vector a)
+	public CartesianVector getAddition(CartesianVector a)
 	{
-		return this.vectorType(this.is3D, this.x + a.x, this.y + a.y, this.z + a.z);
+		return vectorType(is3D, x + a.x, y + a.y, z + a.z);
 	}
 
 	/**
@@ -128,9 +150,9 @@ public class vector
 	 * @return A new vector containing the result of the subtraction. The result
 	 *         will be the same type as the parent (2D or 3D).
 	 */
-	public vector getSubtraction(vector a)
+	public CartesianVector getSubtraction(CartesianVector a)
 	{
-		return this.vectorType(this.is3D, this.x - a.x, this.y - a.y, this.z - a.z);
+		return vectorType(is3D, x - a.x, y - a.y, z - a.z);
 	}
 
 	/**
@@ -142,9 +164,9 @@ public class vector
 	 * @return A new vector3D containing the result of the multiplication. The
 	 *         result will be the same type as the parent (2D or 3D).
 	 */
-	public vector getMultiplication(double scalar)
+	public CartesianVector getMultiplication(double scalar)
 	{
-		return this.vectorType(this.is3D, this.x * scalar, this.y * scalar, this.z * scalar);
+		return vectorType(is3D, x * scalar, y * scalar, z * scalar);
 	}
 
 	/**
@@ -156,9 +178,9 @@ public class vector
 	 * @return A new vector3D containing the result of the division. The result will
 	 *         be the same type as the parent (2D or 3D).
 	 */
-	public vector getDivision(double scalar)
+	public CartesianVector getDivision(double scalar)
 	{
-		return this.vectorType(this.is3D, this.x / scalar, this.y / scalar, this.z / scalar);
+		return vectorType(is3D, x / scalar, y / scalar, z / scalar);
 	}
 
 	/**
@@ -170,9 +192,9 @@ public class vector
 	 *         length of 1. The result will be the same type as the parent (2D or
 	 *         3D).
 	 */
-	public vector getNormalization()
+	public CartesianVector getNormalization()
 	{
-		return this.getDivision(this.magnitude());
+		return getDivision(magnitude());
 	}
 
 	/**
@@ -181,13 +203,13 @@ public class vector
 	 * 
 	 * @param a The vector to add to the parent.
 	 */
-	public void add(vector a)
+	public void add(CartesianVector a)
 	{
-		this.x += a.x;
-		this.y += a.y;
-		if (this.is3D)
+		x += a.x;
+		y += a.y;
+		if (is3D)
 		{
-			this.z += a.z;
+			z += a.z;
 		}
 	}
 
@@ -197,13 +219,13 @@ public class vector
 	 * 
 	 * @param a The vector to subtract from the parent.
 	 */
-	public void subtract(vector a)
+	public void subtract(CartesianVector a)
 	{
-		this.x -= a.x;
-		this.y -= a.y;
-		if (this.is3D)
+		x -= a.x;
+		y -= a.y;
+		if (is3D)
 		{
-			this.z -= a.z;
+			z -= a.z;
 		}
 	}
 
@@ -216,11 +238,11 @@ public class vector
 	 */
 	public void multiply(double scalar)
 	{
-		this.x *= scalar;
-		this.y *= scalar;
-		if (this.is3D)
+		x *= scalar;
+		y *= scalar;
+		if (is3D)
 		{
-			this.z *= scalar;
+			z *= scalar;
 		}
 	}
 
@@ -233,11 +255,11 @@ public class vector
 	 */
 	public void divide(double scalar)
 	{
-		this.x /= scalar;
-		this.y /= scalar;
-		if (this.is3D)
+		x /= scalar;
+		y /= scalar;
+		if (is3D)
 		{
-			this.z /= scalar;
+			z /= scalar;
 		}
 	}
 
@@ -248,7 +270,7 @@ public class vector
 	 */
 	public void normalize()
 	{
-		this.divide(this.magnitude());
+		divide(magnitude());
 	}
 
 	/**
@@ -260,8 +282,21 @@ public class vector
 	 */
 	public double magnitude()
 	{
-		this.magnitude = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2) + Math.pow(this.z, 2));
-		return this.magnitude;
+		magnitude = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+		return magnitude;
+	}
+
+	/**
+	 * Calculates the direction of the parent vector.
+	 * 
+	 * @return A double representing the direction of the parent vector in radians. This value
+	 *         is also stored in the parent to avoid extra calculations when
+	 *         possible.
+	 */
+	public double direction()
+	{
+		direction = Math.atan2(y, x);
+		return direction;
 	}
 
 	/**
@@ -274,14 +309,14 @@ public class vector
 	 */
 	public double average()
 	{
-		this.average = this.x + this.y + this.z;
-		if (this.is3D)
+		average = x + y + z;
+		if (is3D)
 		{
-			this.average = this.average / 3;
+			average = average / 3;
 		} else
 		{
-			this.average = this.average / 2;
+			average = average / 2;
 		}
-		return this.average;
+		return average;
 	}
 }

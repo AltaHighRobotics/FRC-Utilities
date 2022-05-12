@@ -1,50 +1,74 @@
 package utilities;
 
+/**
+ * A system for tracking robot position, and navigating to locations on the field.
+ */
 public class CopyPastAutonomous
 {
+	// The computed drive power needed to reach the waypoint.
 	private double drivePower;
+
+	// The computed steering power needed to aim at the waypoint.
 	private double steeringPower;
 
+	// The current direction of the robot, in radians.
 	private double heading;
+
+	// The direction the robot should attempt to face.
 	private double targetHeading;
+
+	// The wrapped target heading, which represents the shortest path to the target.
 	private double headingWrap;
+	
+	// Controls if the robot drives in reverse or not.
 	private boolean reverse;
 
-	private vector position;
-	private vector velocity;
-	private vector target;
-	private vector positionError;
+	// The position of the robot in 2D space.
+	private CartesianVector position;
+
+	// The speed of the robot in 2D space.
+	private CartesianVector velocity;
+
+	// The robot's target in 2D space.
+	private CartesianVector target;
+
+	// The difference between the robot's target and its position.
+	private CartesianVector positionError;
+
+	// The direction the waypoint is in from the current position.
 	private double directionToWaypoint;
+
+	// The wrapped direction, which represents the shortest direction to steer.
 	private double directionWrap;
+
+	// The speed the robot will attempt to drive at, based on the distance to the target.
 	private double targetSpeed;
 
-	private vector currentMotorPositions;
-	private vector previousMotorPositions;
-	private vector motorVelocities;
+	// The current position of the left and right encoders.
+	private CartesianVector currentMotorPositions;
 
+	// The previous position of the left and right encoders.
+	private CartesianVector previousMotorPositions;
+
+	// The difference between the current and previous encoder positions.
+	private CartesianVector motorVelocities;
+
+	// A PID controller for computing the steering power.
 	private final ConfigurablePID drivetrainHeadingPID;
+
+	// A PID controller for computing the drive power.
 	private final ConfigurablePID drivetrainSpeedPID;
 
 	public CopyPastAutonomous(ConfigurablePID[] PIDArray)
 	{
-		this.drivePower = 0;
-		this.steeringPower = 0;
-		this.heading = 0;
-		this.targetHeading = 0;
-		this.headingWrap = 0;
-		this.reverse = false;
+		this.position = new CartesianVector(0, 0);
+		this.velocity = new CartesianVector(0, 0);
+		this.target = new CartesianVector(0, 0);
+		this.positionError = new CartesianVector(0, 0);
 
-		this.position = new vector(0, 0);
-		this.velocity = new vector(0, 0);
-		this.target = new vector(0, 0);
-		this.positionError = new vector(0, 0);
-		this.directionToWaypoint = 0;
-		this.directionWrap = 0;
-		this.targetSpeed = 0;
-
-		this.currentMotorPositions = new vector(0, 0);
-		this.previousMotorPositions = new vector(0, 0);
-		this.motorVelocities = new vector(0, 0);
+		this.currentMotorPositions = new CartesianVector(0, 0);
+		this.previousMotorPositions = new CartesianVector(0, 0);
+		this.motorVelocities = new CartesianVector(0, 0);
 
 		this.drivetrainHeadingPID = new ConfigurablePID();
 		this.drivetrainSpeedPID = new ConfigurablePID();
@@ -136,7 +160,7 @@ public class CopyPastAutonomous
 	 * @param newPosition A 2D vector object, containing the desired x and y values
 	 *                    to set the position to.
 	 */
-	public void setPosition(vector newPosition)
+	public void setPosition(CartesianVector newPosition)
 	{
 		position.copy(newPosition);
 	}
@@ -148,7 +172,7 @@ public class CopyPastAutonomous
 	 * @return The tracked position of the robot. If updatePosition() has been
 	 *         running, this will reflect the robots position, in inches.
 	 */
-	public vector getPosition()
+	public CartesianVector getPosition()
 	{
 		return position.clone();
 	}
@@ -170,7 +194,7 @@ public class CopyPastAutonomous
 	 * @param waypoint A 2D vector object, containing the desired x and y values to
 	 *                 set the target waypoint to.
 	 */
-	public void setWaypoint(final vector waypoint)
+	public void setWaypoint(final CartesianVector waypoint)
 	{
 		target.copy(waypoint);
 	}
@@ -193,7 +217,7 @@ public class CopyPastAutonomous
 	 * @param point A 2D vector containing the x and y values to check against.
 	 * @return True if the robot position is near the input point.
 	 */
-	public boolean isAtPoint(vector point)
+	public boolean isAtPoint(CartesianVector point)
 	{
 		return Math.abs(position.getSubtraction(point).magnitude()) < PastaConstants.MAX_WAYPOINT_ERROR;
 	}

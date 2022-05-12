@@ -10,27 +10,27 @@ import java.util.ArrayList;
  */
 public class TargetingSystem
 {
-    private vector position = new vector(0, 0, 0);
-    private vector previousPosition = new vector(0, 0, 0);
-    private ArrayList<vector> positions = new ArrayList<vector>();
-    private vector averagePosition = new vector(0, 0, 0);
-    private vector predictedPosition = new vector(0, 0, 0);
-    private vector velocity = new vector(0, 0, 0);
-    private vector previousVelocity = new vector(0, 0, 0);
-    private ArrayList<vector> velocities = new ArrayList<vector>();
-    private vector averageVelocity = new vector(0, 0, 0);
-    private vector acceleration = new vector(0, 0, 0);
-    private ArrayList<vector> accelerations = new ArrayList<vector>();
-    private vector averageAcceleration = new vector(0, 0, 0);
-    public vector leadPosition = new vector(0, 0, 0);
-    private double distance = 0;
-    private double speed = 0;
-    private double velocityThreshold = 0;
+    private CartesianVector position = new CartesianVector(0, 0, 0);
+    private CartesianVector previousPosition = new CartesianVector(0, 0, 0);
+    private ArrayList<CartesianVector> positions = new ArrayList<CartesianVector>();
+    private CartesianVector averagePosition = new CartesianVector(0, 0, 0);
+    private CartesianVector predictedPosition = new CartesianVector(0, 0, 0);
+    private CartesianVector velocity = new CartesianVector(0, 0, 0);
+    private CartesianVector previousVelocity = new CartesianVector(0, 0, 0);
+    private ArrayList<CartesianVector> velocities = new ArrayList<CartesianVector>();
+    private CartesianVector averageVelocity = new CartesianVector(0, 0, 0);
+    private CartesianVector acceleration = new CartesianVector(0, 0, 0);
+    private ArrayList<CartesianVector> accelerations = new ArrayList<CartesianVector>();
+    private CartesianVector averageAcceleration = new CartesianVector(0, 0, 0);
+    public CartesianVector leadPosition = new CartesianVector(0, 0, 0);
+    private double distance;
+    private double speed;
+    private double velocityThreshold;
     private int age = 1;
-    private int refreshThreshold = 0;
-    private int maxMemory = 0;
-    private int maxAccelerationPrediction = 0;
-    private boolean updated = false;
+    private int refreshThreshold;
+    private int maxMemory;
+    private int maxAccelerationPrediction;
+    private boolean updated;
 
     private double CAMERA_HEIGHT;
     private double CAMERA_ELEVATION_ANGLE;
@@ -40,9 +40,9 @@ public class TargetingSystem
     private double azimuthToGoalRadians;
     private double elevationToGoalRadians;
     private double distanceToGoal;
-    private vector relativeGoalPosition;
-    private vector absoluteGoalPosition;
-    private vector realGoalPosition;
+    private CartesianVector relativeGoalPosition;
+    private CartesianVector absoluteGoalPosition;
+    private CartesianVector realGoalPosition;
   
     public TargetingSystem(double velocityThreshold, int refreshThreshold, int maxMemory, int maxAccelerationPrediction)
     {
@@ -50,12 +50,12 @@ public class TargetingSystem
         this.refreshThreshold = refreshThreshold;
         this.maxMemory = maxMemory;
         this.maxAccelerationPrediction = maxAccelerationPrediction;
-        this.relativeGoalPosition = new vector(0, 0, 0);
-        this.absoluteGoalPosition = new vector(0, 0, 0);
-        this.realGoalPosition = new vector(0, 0, 0);
+        this.relativeGoalPosition = new CartesianVector(0, 0, 0);
+        this.absoluteGoalPosition = new CartesianVector(0, 0, 0);
+        this.realGoalPosition = new CartesianVector(0, 0, 0);
     }
 
-    public void setNewTargetPosition(vector newPosition)
+    public void setNewTargetPosition(CartesianVector newPosition)
     {
         position.copy(newPosition);
         updated = true;
@@ -76,7 +76,7 @@ public class TargetingSystem
         updated = true;
     }
 
-    public vector getOdometryCalibration(vector robotPosition)
+    public CartesianVector getOdometryCalibration(CartesianVector robotPosition)
     {
         absoluteGoalPosition = relativeGoalPosition.getAddition(robotPosition);
         return absoluteGoalPosition.getSubtraction(realGoalPosition);
@@ -131,7 +131,7 @@ public class TargetingSystem
      * @param robotLocation The location of the robot on the field, relative to the target.
      * @return The distance between the robot and the target, in the form of a 3D vector.
      */
-    public double getTargetDistance(vector robotLocation)
+    public double getTargetDistance(CartesianVector robotLocation)
     {
         distance = predictedPosition.getSubtraction(robotLocation).magnitude();
         return distance;
@@ -142,18 +142,18 @@ public class TargetingSystem
      * @param vectorList an ArrayList of vector objects
      * @return A vector representing the average value of the vectors in the list.
      */
-    private vector avgVectorList(ArrayList<vector> vectorList)
+    private CartesianVector avgVectorList(ArrayList<CartesianVector> vectorList)
     {
         if(vectorList.size() >= 1) {
-            vector total = vectorList.get(0).clone();
+            CartesianVector total = vectorList.get(0).clone();
             total.set(0, 0, 0);
-            for(vector i : vectorList) {
+            for(CartesianVector i : vectorList) {
                 total.add(i);
             }
             total.divide(vectorList.size());
             return total;
         }
-        return new vector(0, 0, 0);
+        return new CartesianVector(0, 0, 0);
     }
 
     /** Adds a vector to a list of vectors, and removes the oldest vector if the list is above maxSize.
@@ -163,7 +163,7 @@ public class TargetingSystem
      * @param maxSize The maximum length the list is allowed to reach.
      * @return The modified version of the input list.
      */
-    private ArrayList<vector> manageList(ArrayList<vector> vectorList, vector newItem, int maxSize)
+    private ArrayList<CartesianVector> manageList(ArrayList<CartesianVector> vectorList, CartesianVector newItem, int maxSize)
     {
         vectorList.add(newItem);
         if(vectorList.size() > maxSize) {

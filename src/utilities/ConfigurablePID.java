@@ -1,36 +1,77 @@
 package utilities;
 
+/**
+ * A PID controller with settings for ranges on all values, and a velocity based control mode.
+ * 
+ * @author Ian
+ */
 public class ConfigurablePID
 {
-	private double proportionalGain = 0;
-	private double integralGain = 0;
-	private double derivativeGain = 0;
+	// The proportional component of the output. Equal to error * gain.
+	private double proportional;
 
-	private double minProportional = 0;
-	private double maxProportional = 0;
-	private double minIntegral = 0;
-	private double maxIntegral = 0;
-	private double minDerivative = 0;
-	private double maxDerivative = 0;
+	// The integral component of the output. Equal to itself plus error * gain.
+	private double integral;
 
-	private double minOutput = 0;
-	private double maxOutput = 0;
+	// The derivative component of the output. Equal to the rate of change of error * gain.
+	private double derivative;
 
-	private double proportional = 0;
-	private double integral = 0;
-	private double derivative = 0;
+	// The currently measured difference between the setpoint and process variable.
+	private double currentError;
 
-	private double currentError = 0;
-	private double pastError = 0;
-	private double errorDelta = 0;
-	private double errorTolerance = 0;
+	// The error from the previous run of the controller.
+	private double pastError;
 
-	private double pastProcessVariable = 0;
-	private double processVariableVelocity = 0;
+	// The difference between the current and past error.
+	private double errorDelta;
 
-	private double output = 0;
+	// The range where the controller will output 0.
+	private double errorTolerance;
 
-	private double speed = 0;
+	// The previously input process variable
+	private double pastProcessVariable;
+
+	// The difference between the current and past process variables.
+	private double processVariableVelocity;
+	
+	// The output of the controller. Equal to proportional + integral + derivative.
+	private double output;
+
+	// The multipler applied to the error, creating a target speed. If 0, target speed is ignored.
+	private double speed;
+
+	// The multiplier for the proportional component of the output
+	private double proportionalGain;
+
+	// The multiplier for the integral component of the output
+	private double integralGain;
+
+	// The multiplier for the derivative component of the output
+	private double derivativeGain;
+
+	// The minimum value of the proportional component
+	private double minProportional;
+
+	// The maximum value of the proportional component
+	private double maxProportional;
+
+	// The minimum value of the integral component
+	private double minIntegral;
+
+	// The maximum value of the integral component
+	private double maxIntegral;
+
+	// The minimum value of the derivative component
+	private double minDerivative;
+
+	// The maximum value of the derivative component
+	private double maxDerivative;
+
+	// The minimum value of the total output
+	private double minOutput;
+
+	// The maximum value of the total output
+	private double maxOutput;
 
 	public ConfigurablePID() {}
 
@@ -39,7 +80,7 @@ public class ConfigurablePID
 	 * 
 	 * @param proportionalGain scales the proportional of the error
 	 * @param integralGain scales the integral of the error
-	 * @param derivativeGain scales the derivitive of the error
+	 * @param derivativeGain scales the derivative of the error
 	 */
 	public ConfigurablePID(double proportionalGain, double integralGain, double derivativeGain)
 	{
