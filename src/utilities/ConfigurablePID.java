@@ -3,7 +3,7 @@ package utilities;
 /**
  * A PID controller with settings for ranges on all values, and a velocity based control mode.
  * 
- * @author Ian
+ * @author Icarus Innovated
  */
 public class ConfigurablePID
 {

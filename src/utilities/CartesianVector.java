@@ -5,7 +5,6 @@ package utilities;
  * contains an x, y, and optionally a z value, along with various functions for
  * performing standard math operations on itself.
  * 
- * @author Ian
  * @author Icarus Innovated
  */
 public class CartesianVector

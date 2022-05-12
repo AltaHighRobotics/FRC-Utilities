@@ -3,56 +3,115 @@ package utilities;
 import java.util.ArrayList;
 
 /** A class for creating and tracking a target in 3D space. Also allows for predicting where the target will be in the future.
- * 
- *  @author Ian
- *  @author Tim
+ *
  *  @author Icarus Innovated
  */
 public class TargetingSystem
 {
+    // The current measured location of the target in 3D space, relative to the robot.
     private CartesianVector position = new CartesianVector(0, 0, 0);
+
+    // The previous average location of the target.
     private CartesianVector previousPosition = new CartesianVector(0, 0, 0);
+
+    // All previous locations of the target, up to the value of max memory.
     private ArrayList<CartesianVector> positions = new ArrayList<CartesianVector>();
+
+    // The average of the previous positions.
     private CartesianVector averagePosition = new CartesianVector(0, 0, 0);
+
+    // The position the target should be in, computed in place of a real position if the target is lost.
     private CartesianVector predictedPosition = new CartesianVector(0, 0, 0);
+
+    // The difference between the average position and the previous position.
     private CartesianVector velocity = new CartesianVector(0, 0, 0);
+
+    // The previous average velocity of the target.
     private CartesianVector previousVelocity = new CartesianVector(0, 0, 0);
+
+    // All previous velocities of the target, up to the value of max memory.
     private ArrayList<CartesianVector> velocities = new ArrayList<CartesianVector>();
+
+    // The average of the previous velocities.
     private CartesianVector averageVelocity = new CartesianVector(0, 0, 0);
+
+    // The difference between the average velocity and the previous velocity.
     private CartesianVector acceleration = new CartesianVector(0, 0, 0);
+
+    // All previous accelerations of the target, up to the value of max memory.
     private ArrayList<CartesianVector> accelerations = new ArrayList<CartesianVector>();
+
+    // The average of the previous accelerations.
     private CartesianVector averageAcceleration = new CartesianVector(0, 0, 0);
+
+    // The position the target is predicted to be in by the time the projectile hits it.
     public CartesianVector leadPosition = new CartesianVector(0, 0, 0);
-    private double distance;
+
+    // The distance between the camera and the target's predicted position.
+    private double distanceToPredictedGoal;
+
+    // The speed the target is moving at, relative to the robot.
     private double speed;
+
+    // The minimum speed that must be reached for target leading to be computed.
     private double velocityThreshold;
+
+    // The time that has passed since the last time the target was seen.
     private int age = 1;
+
+    // The amount of time that must pass without seeing the target for the system to reset collected values.
     private int refreshThreshold;
+
+    // The maximum amount of previous values to remember.
     private int maxMemory;
+
+    // The maximum amount of time that acceleration should be used in predictions.
     private int maxAccelerationPrediction;
+
+    // True when the target has been seen this frame.
     private boolean updated;
 
-    private double CAMERA_HEIGHT;
-    private double CAMERA_ELEVATION_ANGLE;
-    private double GOAL_HEIGHT;
+    // The azimuth angle between the robot and the target, if the robot was aligned with the field.
     private double absoluteAzimuthToTarget;
+
+    // The elevation angle between the robot and the target, taking camera angle into acount.
     private double absoluteElevationToTarget;
+
+    // Equal to the absolute azimuth, but in radians instead of degrees.
     private double azimuthToGoalRadians;
+
+    // Equal to the absolute elevation, but in radians instead of degrees.
     private double elevationToGoalRadians;
+
+    // The distance between the camera and the target.
     private double distanceToGoal;
+
+    // The measured position of the goal, relative to the robot.
     private CartesianVector relativeGoalPosition;
+
+    // The measured position of the goal, relative to the field.
     private CartesianVector absoluteGoalPosition;
-    private CartesianVector realGoalPosition;
+
+    // The location of the camera relative to the robot.
+    private final CartesianVector CAMERA_POSITION;
+
+    // The angle the camera is mounted at, relative to horizontal.
+    private final double CAMERA_ELEVATION_ANGLE;
+
+    // The location of the goal (measure this on the actual field for best results).
+    private final CartesianVector GOAL_POSITION;
   
-    public TargetingSystem(double velocityThreshold, int refreshThreshold, int maxMemory, int maxAccelerationPrediction)
+    public TargetingSystem(CartesianVector cameraPosition, double cameraElevationAngle, CartesianVector goalPosition, double velocityThreshold, int refreshThreshold, int maxMemory, int maxAccelerationPrediction)
     {
+        this.CAMERA_POSITION = cameraPosition;
+        this.CAMERA_ELEVATION_ANGLE = cameraElevationAngle;
+        this.GOAL_POSITION = goalPosition;
         this.velocityThreshold = velocityThreshold;
         this.refreshThreshold = refreshThreshold;
         this.maxMemory = maxMemory;
         this.maxAccelerationPrediction = maxAccelerationPrediction;
         this.relativeGoalPosition = new CartesianVector(0, 0, 0);
         this.absoluteGoalPosition = new CartesianVector(0, 0, 0);
-        this.realGoalPosition = new CartesianVector(0, 0, 0);
     }
 
     public void setNewTargetPosition(CartesianVector newPosition)
@@ -69,7 +128,7 @@ public class TargetingSystem
         absoluteElevationToTarget = targetingElevation + CAMERA_ELEVATION_ANGLE;
         elevationToGoalRadians = Math.toRadians(absoluteElevationToTarget);
 
-        distanceToGoal = (GOAL_HEIGHT-CAMERA_HEIGHT)/(Math.tan(elevationToGoalRadians));
+        distanceToGoal = (GOAL_POSITION.z-CAMERA_POSITION.z)/(Math.tan(elevationToGoalRadians));
         relativeGoalPosition.set(Math.cos(azimuthToGoalRadians)*distanceToGoal,Math.sin(azimuthToGoalRadians)*distanceToGoal);
         position.copy(relativeGoalPosition);
         
@@ -79,7 +138,7 @@ public class TargetingSystem
     public CartesianVector getOdometryCalibration(CartesianVector robotPosition)
     {
         absoluteGoalPosition = relativeGoalPosition.getAddition(robotPosition);
-        return absoluteGoalPosition.getSubtraction(realGoalPosition);
+        return absoluteGoalPosition.getSubtraction(GOAL_POSITION);
     }
 
     /** Updates the target position, and computes the velocity and acceleration of the target.
@@ -133,8 +192,8 @@ public class TargetingSystem
      */
     public double getTargetDistance(CartesianVector robotLocation)
     {
-        distance = predictedPosition.getSubtraction(robotLocation).magnitude();
-        return distance;
+        distanceToPredictedGoal = predictedPosition.getSubtraction(robotLocation).magnitude();
+        return distanceToPredictedGoal;
     }
 
     /** Gets the average of a list of vectors

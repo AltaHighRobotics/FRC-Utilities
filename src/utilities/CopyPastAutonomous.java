@@ -2,6 +2,8 @@ package utilities;
 
 /**
  * A system for tracking robot position, and navigating to locations on the field.
+ * 
+ * @author Icarus Innovated
  */
 public class CopyPastAutonomous
 {
