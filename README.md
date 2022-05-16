@@ -1,4 +1,4 @@
-# FRC Utilities ![coverage](https://img.shields.io/badge/Build/Test-testing25-yellow)
+# FRC Utilities ![coverage](https://img.shields.io/badge/Build/Test-testing-yellow)
 
 A custom addition to WPI Lib
 
