@@ -1,86 +1,138 @@
 package utilities;
 
 /**
- * A PID controller with settings for ranges on all values, and a velocity based control mode.
+ * A PID controller with settings for ranges on all values, and a velocity based
+ * control mode.
  * 
  * @author Icarus Innovated
  */
 public class ConfigurablePID
 {
-	// The proportional component of the output. Equal to error * gain.
+	/**
+	 * The proportional component of the output. Equal to error * gain.
+	 */
 	private double proportional;
 
-	// The integral component of the output. Equal to itself plus error * gain.
+	/**
+	 * The integral component of the output. Equal to itself plus error * gain.
+	 */
 	private double integral;
 
-	// The derivative component of the output. Equal to the rate of change of error * gain.
+	/**
+	 * The derivative component of the output. Equal to the rate of change of error
+	 * * gain.
+	 */
 	private double derivative;
 
-	// The currently measured difference between the setpoint and process variable.
+	/**
+	 * The currently measured difference between the setpoint and process variable.
+	 */
 	private double currentError;
 
-	// The error from the previous run of the controller.
+	/**
+	 * The error from the previous run of the controller.
+	 */
 	private double pastError;
 
-	// The difference between the current and past error.
+	/**
+	 * The difference between the current and past error.
+	 */
 	private double errorDelta;
 
-	// The range where the controller will output 0.
+	/**
+	 * The range where the controller will output 0.
+	 */
 	private double errorTolerance;
 
-	// The previously input process variable
+	/**
+	 * The previously input process variable
+	 */
 	private double pastProcessVariable;
 
-	// The difference between the current and past process variables.
+	/**
+	 * The difference between the current and past process variables.
+	 */
 	private double processVariableVelocity;
-	
-	// The output of the controller. Equal to proportional + integral + derivative.
+
+	/**
+	 * The output of the controller. Equal to proportional + integral + derivative.
+	 */
 	private double output;
 
-	// The multipler applied to the error, creating a target speed. If 0, target speed is ignored.
+	/**
+	 * The multiplier applied to the error, creating a target speed. If 0, target
+	 * speed is ignored.
+	 */
 	private double speed;
 
-	// The multiplier for the proportional component of the output
+	/**
+	 * The multiplier for the proportional component of the output
+	 */
 	private double proportionalGain;
 
-	// The multiplier for the integral component of the output
+	/**
+	 * The multiplier for the integral component of the output
+	 */
 	private double integralGain;
 
-	// The multiplier for the derivative component of the output
+	/**
+	 * The multiplier for the derivative component of the output
+	 */
 	private double derivativeGain;
 
-	// The minimum value of the proportional component
+	/**
+	 * The minimum value of the proportional component
+	 */
 	private double minProportional;
 
-	// The maximum value of the proportional component
+	/**
+	 * The maximum value of the proportional component
+	 */
 	private double maxProportional;
 
-	// The minimum value of the integral component
+	/**
+	 * The minimum value of the integral component
+	 */
 	private double minIntegral;
 
-	// The maximum value of the integral component
+	/**
+	 * The maximum value of the integral component
+	 */
 	private double maxIntegral;
 
-	// The minimum value of the derivative component
+	/**
+	 * The minimum value of the derivative component
+	 */
 	private double minDerivative;
 
-	// The maximum value of the derivative component
+	/**
+	 * The maximum value of the derivative component
+	 */
 	private double maxDerivative;
 
-	// The minimum value of the total output
+	/**
+	 * The minimum value of the total output
+	 */
 	private double minOutput;
 
-	// The maximum value of the total output
+	/**
+	 * The maximum value of the total output
+	 */
 	private double maxOutput;
 
-	public ConfigurablePID() {}
+	/**
+	 * Creates a new Configurable PID with default parameters
+	 */
+	public ConfigurablePID()
+	{
+	}
 
 	/**
 	 * Creates a new configurable PID controller with the set gains.
 	 * 
 	 * @param proportionalGain scales the proportional of the error
-	 * @param integralGain scales the integral of the error
-	 * @param derivativeGain scales the derivative of the error
+	 * @param integralGain     scales the integral of the error
+	 * @param derivativeGain   scales the derivative of the error
 	 */
 	public ConfigurablePID(double proportionalGain, double integralGain, double derivativeGain)
 	{
@@ -90,10 +142,13 @@ public class ConfigurablePID
 	}
 
 	/**
-	 * Computes a new output based on the setpoint and process variable. If a speed has been set, the output will be based on speed.
+	 * Computes a new output based on the set point and process variable. If a speed
+	 * has been set, the output will be based on speed.
 	 * 
-	 * @param setpoint The value that the system should try match the process variable to.
-	 * @param processVariable The measured value from the system that is being controlled.
+	 * @param setpoint        The value that the system should try match the process
+	 *                        variable to.
+	 * @param processVariable The measured value from the system that is being
+	 *                        controlled.
 	 * @return The computed output to correct the process variable to the setpoint.
 	 */
 	public double runPID(double setpoint, double processVariable)
@@ -104,12 +159,12 @@ public class ConfigurablePID
 			pastProcessVariable = processVariable;
 			currentError = (setpoint - processVariable) * speed;
 			currentError -= processVariableVelocity;
-		}
-		else
+		} else
 		{
 			currentError = setpoint - processVariable;
 		}
-		if (Math.abs(currentError) < errorTolerance) {
+		if (Math.abs(currentError) < errorTolerance)
+		{
 			resetValues();
 			return 0;
 		}
@@ -144,10 +199,11 @@ public class ConfigurablePID
 	}
 
 	/**
-	 * Set the speed used in runPID().
-	 * Once speed has been set to a non-zero number, the controller will use velocity in its calculations.
+	 * Set the speed used in runPID(). Once speed has been set to a non-zero number,
+	 * the controller will use velocity in its calculations.
 	 *
-	 * @param newSpeed The speed to use in runPID(). This is in units per program run.
+	 * @param newSpeed The speed to use in runPID(). This is in units per program
+	 *                 run.
 	 */
 	public void setSpeed(double newSpeed)
 	{
@@ -335,8 +391,8 @@ public class ConfigurablePID
 	/**
 	 * Set the allowed error of the controller.
 	 * 
-	 * @param newErrorTolerance When the absolute value of the error is less than this number, 
-	 * the controller will output 0 and reset.
+	 * @param newErrorTolerance When the absolute value of the error is less than
+	 *                          this number, the controller will output 0 and reset.
 	 */
 	public void setErrorTolerance(double newErrorTolerance)
 	{
@@ -344,8 +400,9 @@ public class ConfigurablePID
 	}
 
 	/**
-	 * Reset values to 0. This function should be called whenever the controller stops running.
-	 * This function will be called automatically when running the controller if a tolerance has been configured.
+	 * Reset values to 0. This function should be called whenever the controller
+	 * stops running. This function will be called automatically when running the
+	 * controller if a tolerance has been configured.
 	 */
 	public void resetValues()
 	{
@@ -357,6 +414,14 @@ public class ConfigurablePID
 		processVariableVelocity = 0;
 	}
 
+	/**
+	 * clamp java doc
+	 * 
+	 * @param value
+	 * @param min
+	 * @param max
+	 * @return
+	 */
 	private double clamp(double value, double min, double max)
 	{
 		return Math.min(Math.max(value, min), max);

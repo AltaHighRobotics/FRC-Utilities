@@ -1,66 +1,111 @@
 package utilities;
 
 /**
- * A system for tracking robot position, and navigating to locations on the field.
+ * A system for tracking robot position, and navigating to locations on the
+ * field.
  * 
  * @author Icarus Innovated
  */
 public class CopyPastAutonomous
 {
-	// The computed drive power needed to reach the waypoint.
+	/**
+	 * The computed drive power needed to reach the waypoint.
+	 */
 	private double drivePower;
 
-	// The computed steering power needed to aim at the waypoint.
+	/**
+	 * The computed steering power needed to aim at the waypoint.
+	 */
 	private double steeringPower;
 
-	// The current direction of the robot, in radians.
+	/**
+	 * The current direction of the robot, in radians.
+	 */
 	private double heading;
 
-	// The direction the robot should attempt to face.
+	/**
+	 * The direction the robot should attempt to face.
+	 */
 	private double targetHeading;
 
-	// The wrapped target heading, which represents the shortest path to the target.
+	/**
+	 * The wrapped target heading, which represents the shortest path to the target.
+	 */
 	private double headingWrap;
-	
-	// Controls if the robot drives in reverse or not.
+
+	/**
+	 * Controls if the robot drives in reverse or not.
+	 */
 	private boolean reverse;
 
-	// The position of the robot in 2D space.
+	/**
+	 * The position of the robot in 2D space.
+	 */
 	private CartesianVector position;
 
-	// The speed of the robot in 2D space.
+	/**
+	 * The speed of the robot in 2D space.
+	 */
 	private CartesianVector velocity;
 
-	// The robot's target in 2D space.
+	/**
+	 * The robot's target in 2D space.
+	 */
 	private CartesianVector target;
 
-	// The difference between the robot's target and its position.
+	/**
+	 * The difference between the robot's target and its position.
+	 */
 	private CartesianVector positionError;
 
-	// The direction the waypoint is in from the current position.
+	/**
+	 * The direction the waypoint is in from the current position.
+	 */
 	private double directionToWaypoint;
 
-	// The wrapped direction, which represents the shortest direction to steer.
+	/**
+	 * The wrapped direction, which represents the shortest direction to steer.
+	 */
 	private double directionWrap;
 
-	// The speed the robot will attempt to drive at, based on the distance to the target.
+	/**
+	 * The speed the robot will attempt to drive at, based on the distance to the
+	 * target.
+	 */
 	private double targetSpeed;
 
-	// The current position of the left and right encoders.
+	/**
+	 * The current position of the left and right encoders.
+	 */
 	private CartesianVector currentMotorPositions;
 
-	// The previous position of the left and right encoders.
+	/**
+	 * The previous position of the left and right encoders.
+	 */
 	private CartesianVector previousMotorPositions;
 
-	// The difference between the current and previous encoder positions.
+	/**
+	 * The difference between the current and previous encoder positions.
+	 */
 	private CartesianVector motorVelocities;
 
-	// A PID controller for computing the steering power.
+	/**
+	 * A PID controller for computing the steering power.
+	 */
 	private final ConfigurablePID drivetrainHeadingPID;
 
-	// A PID controller for computing the drive power.
+	/**
+	 * A PID controller for computing the drive power.
+	 */
 	private final ConfigurablePID drivetrainSpeedPID;
 
+	/**
+	 * Creates a new CopyPastAutonomous using two ConfigurablePID objects stored
+	 * inside of an array
+	 * 
+	 * @param PIDArray an array containing two ConfigurablePID objects, a heading
+	 *                 PID and a speed PID
+	 */
 	public CopyPastAutonomous(ConfigurablePID[] PIDArray)
 	{
 		this.position = new CartesianVector(0, 0);
@@ -93,22 +138,21 @@ public class CopyPastAutonomous
 		steeringPower = 0;
 		heading = Math.toRadians(yaw);
 
-		currentMotorPositions.set(leftMotorEncoderPos / PastaConstants.ENCODER_UNITS_PER_ROTATION,
-				rightMotorEncoderPos / PastaConstants.ENCODER_UNITS_PER_ROTATION);
+		currentMotorPositions.set(leftMotorEncoderPos / UtilitiyConstants.ENCODER_UNITS_PER_ROTATION,
+				rightMotorEncoderPos / UtilitiyConstants.ENCODER_UNITS_PER_ROTATION);
 		motorVelocities = currentMotorPositions.getSubtraction(previousMotorPositions);
 		previousMotorPositions.copy(currentMotorPositions);
-		motorVelocities.multiply(PastaConstants.INCHES_PER_ROTATION);
+		motorVelocities.multiply(UtilitiyConstants.INCHES_PER_ROTATION);
 		motorVelocities.average();
 
-		velocity.set((Math.cos(heading) * motorVelocities.average),
-				(Math.sin(heading) * motorVelocities.average));
+		velocity.set((Math.cos(heading) * motorVelocities.average), (Math.sin(heading) * motorVelocities.average));
 		position.add(velocity);
 	}
 
 	/**
 	 * Updates the internal target heading and target speed of the robot. The result
-	 * is based on the currently set waypoint.
-	 * Calling this function will also update the desired motor power levels.
+	 * is based on the currently set waypoint. Calling this function will also
+	 * update the desired motor power levels.
 	 * 
 	 */
 	public void updateTargetHeadingAndSpeed()
@@ -116,7 +160,7 @@ public class CopyPastAutonomous
 		positionError = target.getSubtraction(position);
 
 		directionToWaypoint = Math.atan2(positionError.y, positionError.x);
-		directionWrap = (((directionToWaypoint - heading - Math.PI)%(Math.PI*2)) + Math.PI);
+		directionWrap = (((directionToWaypoint - heading - Math.PI) % (Math.PI * 2)) + Math.PI);
 
 		targetSpeed = Math.cos(directionWrap) * positionError.magnitude();
 		drivePower = drivetrainSpeedPID.runPID(targetSpeed, motorVelocities.average);
@@ -127,7 +171,7 @@ public class CopyPastAutonomous
 			targetHeading += Math.PI;
 		}
 
-		headingWrap = (((targetHeading - heading - Math.PI)%(Math.PI*2)) + Math.PI);
+		headingWrap = (((targetHeading - heading - Math.PI) % (Math.PI * 2)) + Math.PI);
 		steeringPower = drivetrainHeadingPID.runPID(headingWrap, 0);
 	}
 
@@ -180,9 +224,12 @@ public class CopyPastAutonomous
 	}
 
 	/**
-	 * Sets the reverse setting of the robot. This value controls if the robot will go to waypoints while driving backwards or forwards.
+	 * Sets the reverse setting of the robot. This value controls if the robot will
+	 * go to waypoints while driving backwards or forwards.
 	 * 
-	 * @param driveReverse A boolean for if the robot will drive in reverse. When true, it will drive backwards. When false, it will drive forwards.
+	 * @param driveReverse A boolean for if the robot will drive in reverse. When
+	 *                     true, it will drive backwards. When false, it will drive
+	 *                     forwards.
 	 */
 	public void setReverse(boolean driveReverse)
 	{
@@ -209,7 +256,7 @@ public class CopyPastAutonomous
 	 */
 	public boolean hasReachedWaypoint()
 	{
-		return Math.abs(positionError.magnitude()) < PastaConstants.MAX_WAYPOINT_ERROR;
+		return Math.abs(positionError.magnitude()) < UtilitiyConstants.MAX_WAYPOINT_ERROR;
 	}
 
 	/**
@@ -221,7 +268,7 @@ public class CopyPastAutonomous
 	 */
 	public boolean isAtPoint(CartesianVector point)
 	{
-		return Math.abs(position.getSubtraction(point).magnitude()) < PastaConstants.MAX_WAYPOINT_ERROR;
+		return Math.abs(position.getSubtraction(point).magnitude()) < UtilitiyConstants.MAX_WAYPOINT_ERROR;
 	}
 
 }

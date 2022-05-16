@@ -1,6 +1,6 @@
 package utilities;
 
-public class PastaConstants 
+public class UtilitiyConstants 
 {
 
     public static final double DRIVETRAIN_HEADING_PROPORTIONAL_GAIN = 0;

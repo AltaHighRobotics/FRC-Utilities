@@ -9,25 +9,44 @@ package utilities;
  */
 public class CartesianVector
 {
-	// The x component of the vector
+	/**
+	 * The x component of the vector
+	 */
 	public double x;
-	
-	// The y component of the vector
+
+	/**
+	 * The y component of the vector
+	 */
 	public double y;
 
-	// The z component of the vector. If a vector is created with only two paramaters, this value will remain 0
+	/**
+	 * The z component of the vector. If a vector is created with only two
+	 * parameters, this value will remain 0
+	 */
 	public double z;
 
-	// The direction of the vector, in radians. This is 0 unless the direction function is called.
+	/**
+	 * The direction of the vector, in radians. This is 0 unless the direction
+	 * function is called.
+	 */
 	public double direction;
 
-	// The magnitude of the vector. This is 0 unless the magnitude function is called.
+	/**
+	 * The magnitude of the vector. This is 0 unless the magnitude function is
+	 * called.
+	 */
 	public double magnitude;
 
-	// The average value of the components of the vector. This is 0 unless the average function is called.
+	/**
+	 * The average value of the components of the vector. This is 0 unless the
+	 * average function is called.
+	 */
 	public double average;
-	
-	// If the vector is created with 3 values, this will be true. Otherwise, it will be false.
+
+	/**
+	 * If the vector is created with 3 values, this will be true. Otherwise, it will
+	 * be false.
+	 */
 	public final boolean is3D;
 
 	/**
@@ -60,13 +79,15 @@ public class CartesianVector
 	}
 
 	/**
-	 * Returns a vector object with the specified values and forces it to match the given type.
+	 * Returns a vector object with the specified values and forces it to match the
+	 * given type.
 	 * 
-	 * @param force3D If this is false, the input z value will be discarded.
+	 * @param force3D  If this is false, the input z value will be discarded.
 	 * @param initialX A double representing the initial x value.
 	 * @param initialY A double representing the initial y value.
 	 * @param initialZ A double representing the initial z value.
-	 * @return A vector with the same values as the inputs, and with the same type as the input (2D or 3D).
+	 * @return A vector with the same values as the inputs, and with the same type
+	 *         as the input (2D or 3D).
 	 */
 	private CartesianVector vectorType(boolean force3D, double initialX, double initialY, double initialZ)
 	{
@@ -288,9 +309,9 @@ public class CartesianVector
 	/**
 	 * Calculates the direction of the parent vector.
 	 * 
-	 * @return A double representing the direction of the parent vector in radians. This value
-	 *         is also stored in the parent to avoid extra calculations when
-	 *         possible.
+	 * @return A double representing the direction of the parent vector in radians.
+	 *         This value is also stored in the parent to avoid extra calculations
+	 *         when possible.
 	 */
 	public double direction()
 	{
