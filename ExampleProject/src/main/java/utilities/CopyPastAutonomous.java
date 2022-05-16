@@ -1,172 +1,292 @@
 package utilities;
 
-
-
+/**
+ * A system for tracking robot position, and navigating to locations on the
+ * field.
+ * 
+ * @author Icarus Innovated
+ */
 public class CopyPastAutonomous
 {
-	private final ConfigurablePID drivetrainHeadingPID;
-	private final ConfigurablePID drivetrainSpeedPID;
-
-	private double[] pos = { -9999, -9999 };
-
-	private double currentRightMotorPosition;
-	private double currentLeftMotorPosition;
-
+	/**
+	 * The computed drive power needed to reach the waypoint.
+	 */
 	private double drivePower;
+
+	/**
+	 * The computed steering power needed to aim at the waypoint.
+	 */
 	private double steeringPower;
 
-	private double currentHeading;
-	private double previousHeading;
-	private double headingError;
-	private double headingRate;
+	/**
+	 * The current direction of the robot, in radians.
+	 */
+	private double heading;
 
-	private double previousRightMotorPosition;
-	private double previousLeftMotorPosition;
-	private double distanceTraveledLeft;
-	private double distanceTraveledRight;
-	private double distanceTraveled;
-	private double distanceError;
-	private double robotX;
-	private double robotY;
-
-	private double targetX;
-	private double targetY;
+	/**
+	 * The direction the robot should attempt to face.
+	 */
 	private double targetHeading;
 
-	public CopyPastAutonomous(ConfigurablePID[] PIDArray)
+	/**
+	 * The wrapped target heading, which represents the shortest path to the target.
+	 */
+	private double headingWrap;
+
+	/**
+	 * Controls if the robot drives in reverse or not.
+	 */
+	private boolean reverse;
+
+	/**
+	 * The position of the robot in 2D space.
+	 */
+	private CartesianVector position;
+
+	/**
+	 * The speed of the robot in 2D space.
+	 */
+	private CartesianVector velocity;
+
+	/**
+	 * The robot's target in 2D space.
+	 */
+	private CartesianVector target;
+
+	/**
+	 * The difference between the robot's target and its position.
+	 */
+	private CartesianVector positionError;
+
+	/**
+	 * The direction the waypoint is in from the current position.
+	 */
+	private double directionToWaypoint;
+
+	/**
+	 * The wrapped direction, which represents the shortest direction to steer.
+	 */
+	private double directionWrap;
+
+	/**
+	 * The speed the robot will attempt to drive at, based on the distance to the
+	 * target.
+	 */
+	private double targetSpeed;
+
+	/**
+	 * The current position of the left and right encoders.
+	 */
+	private CartesianVector currentMotorPositions;
+
+	/**
+	 * The previous position of the left and right encoders.
+	 */
+	private CartesianVector previousMotorPositions;
+
+	/**
+	 * The difference between the current and previous encoder positions.
+	 */
+	private CartesianVector motorVelocities;
+
+	/**
+	 * The ratio between drive encoder units and full rotations of the drive motor.
+	 * For example, a falcon 500 integrated encoder has 2048 steps per rotation,
+	 * so for drivetrains running falcon 500s, set this to 2048.
+	 */
+	private final int ENCODER_UNITS_PER_ROTATION;
+
+	/**
+	 * The ratio between full rotations of the drive motor and inches travled.
+	 * For example, for 4 inch wheel that is direct driven by the drive motor,
+	 * the correct value would be PI * 4.
+	 */
+	private final double INCHES_PER_ROTATION;
+
+	/**
+	 * A PID controller for computing the steering power.
+	 */
+	private final ConfigurablePID drivetrainHeadingPID;
+
+	/**
+	 * A PID controller for computing the drive power.
+	 */
+	private final ConfigurablePID drivetrainSpeedPID;
+
+	/**
+	 * Creates a new CopyPastAutonomous with the set ratio constants and PID configurations.
+	 * 
+	 * @param encoderUnitsPerRotation The ratio between drive encoder units and full rotations of the drive motor.
+	 * @param inchesPerRotation       The ratio between full rotations of the drive motor and inches travled.
+	 * @param headingPIDConfig        A PIDConfiguration with settings for the heading controller.
+	 * @param speedPIDConfig          A PIDConfiguration with settings for the speed controller.
+	 */
+	public CopyPastAutonomous(int encoderUnitsPerRotation, double inchesPerRotation, PIDConfiguration headingPIDConfig, PIDConfiguration speedPIDConfig)
 	{
-		this.robotY = 0;
-		this.robotX = 0;
-		this.targetX = 0;
-		this.targetY = 0;
-		this.targetHeading = 0;
+		this.position = new CartesianVector(0, 0);
+		this.velocity = new CartesianVector(0, 0);
+		this.target = new CartesianVector(0, 0);
+		this.positionError = new CartesianVector(0, 0);
 
-		this.drivetrainHeadingPID = PIDArray[0];
-		this.drivetrainSpeedPID = PIDArray[1];
-	}
+		this.currentMotorPositions = new CartesianVector(0, 0);
+		this.previousMotorPositions = new CartesianVector(0, 0);
+		this.motorVelocities = new CartesianVector(0, 0);
 
-	public void setArcadeDrive(double forward, double turn)
-	{
+		this.ENCODER_UNITS_PER_ROTATION = encoderUnitsPerRotation;
+		this.INCHES_PER_ROTATION = inchesPerRotation;
 
-	}
-
-	public void setSwerveDrive(double forward, double turn)
-	{
-
-	}
-
-	public void drivetrainPositionIntegration(double leftMotorEncoderPos, double rightMotorEncodePos, double yaw)
-	{
-		currentLeftMotorPosition = leftMotorEncoderPos / PastaConstants.ENCODER_ROTATION_UNITS;
-		currentRightMotorPosition = rightMotorEncodePos / PastaConstants.ENCODER_ROTATION_UNITS;
-
-		currentHeading = yaw;
-
-		currentHeading = Math.toRadians(currentHeading);
-
-		distanceTraveledLeft = PastaConstants.DRIVETRAIN_ROTATION_DISTANCE_RATIO * PastaConstants.DRIVETRAIN_GEAR_RATIO
-				* (currentLeftMotorPosition - previousLeftMotorPosition);
-		distanceTraveledRight = PastaConstants.DRIVETRAIN_ROTATION_DISTANCE_RATIO * PastaConstants.DRIVETRAIN_GEAR_RATIO
-				* (currentRightMotorPosition - previousRightMotorPosition);
-		distanceTraveled = (distanceTraveledLeft + distanceTraveledRight) / 2;
-
-		previousLeftMotorPosition = currentLeftMotorPosition;
-		previousRightMotorPosition = currentRightMotorPosition;
-
-		robotX = robotX + (Math.cos(currentHeading) * distanceTraveled);
-		robotY = robotY + (Math.sin(currentHeading) * distanceTraveled);
-	}
-
-	public void driveForwardTo(double waypointX, double waypointY)
-	{
-
-	}
-
-	public void driveBackwardsTo(double waypointX, double waypointY)
-	{
-
-	}
-
-	public double[] getPos()
-	{
-		pos[0] = robotX;
-		pos[1] = robotY;
-		return pos;
+		this.drivetrainHeadingPID = new ConfigurablePID(headingPIDConfig);
+		this.drivetrainSpeedPID = new ConfigurablePID(speedPIDConfig);
 	}
 
 	/**
-	 * DriveTrain drives to the specified waypoint No longer functions, uses methods
-	 * no longer supported
+	 * Updates where the robot believes itself to be. This function should be called
+	 * before any others, and also resets power levels as a safety.
 	 * 
-	 * @param waypointX
-	 * @param waypointY
-	 * @param driveBackwards
-	 * @return if it has reached a waypoint
-	 * @deprecated
+	 * @param leftMotorEncoderPos  The raw encoder value of the left side of the
+	 *                             robot.
+	 * @param rightMotorEncoderPos The raw encoder value of the right side of the
+	 *                             robot.
+	 * @param yaw                  The compass heading of the robot, in degrees, as
+	 *                             measured by an IMU.
 	 */
-	public boolean setDriveToWaypoint(double waypointX, double waypointY, boolean driveBackwards)
+	public void updateRobotPositon(double leftMotorEncoderPos, double rightMotorEncoderPos, double yaw)
 	{
-		this.targetX = waypointX;
-		this.targetY = waypointY;
-		if (!driveBackwards)
-		{
-			this.targetHeading = Math.toDegrees(Math.atan2(this.targetY - this.robotY, this.targetX - this.robotX));
-		} else
-		{
-			this.targetHeading = Math
-					.toDegrees(Math.atan2(-(this.targetY - this.robotY), -(this.targetX - this.robotX)));
-		}
-		// this.currentHeading = (double) this.navX.getYaw();
-		this.headingRate = this.currentHeading - this.previousHeading;
-		this.headingError = this.targetHeading - this.currentHeading;
-		this.previousHeading = this.currentHeading;
+		drivePower = 0;
+		steeringPower = 0;
+		heading = Math.toRadians(yaw);
 
-		this.distanceError = Math
-				.sqrt(Math.pow(this.targetY - this.robotY, 2) + Math.pow(this.targetX - this.robotX, 2));
+		currentMotorPositions.set(leftMotorEncoderPos / ENCODER_UNITS_PER_ROTATION,
+				rightMotorEncoderPos / ENCODER_UNITS_PER_ROTATION);
+		motorVelocities = currentMotorPositions.getSubtraction(previousMotorPositions);
+		previousMotorPositions.copy(currentMotorPositions);
+		motorVelocities.multiply(INCHES_PER_ROTATION);
+		motorVelocities.average();
 
-		this.steeringPower = this.drivetrainHeadingPID.runVelocityPID(this.targetHeading, this.currentHeading,
-				this.headingRate);
-
-		if (Math.abs(this.headingError) < PastaConstants.MAX_DRIVE_HEADING_ERROR)
-		{
-			this.drivePower = this.drivetrainSpeedPID.runPID(0, -this.distanceError);
-			if (driveBackwards)
-			{
-				this.drivePower = -this.drivePower;
-			}
-		} else
-		{
-			this.drivePower = 0;
-		}
-		if (hasReachedWaypoint())
-		{
-			// stopMotors();
-		} else
-		{
-			this.setArcadeDrive(this.drivePower, this.steeringPower);
-		}
-		return hasReachedWaypoint();
+		velocity.set((Math.cos(heading) * motorVelocities.average), (Math.sin(heading) * motorVelocities.average));
+		position.add(velocity);
 	}
 
-	public boolean pointAtWaypoint(double waypointX, double waypointY)
+	/**
+	 * Updates the internal target heading and target speed of the robot. The result
+	 * is based on the currently set waypoint. Calling this function will also
+	 * update the desired motor power levels.
+	 * 
+	 */
+	public void updateTargetHeadingAndSpeed()
 	{
-		return false;
+		positionError = target.getSubtraction(position);
 
+		directionToWaypoint = Math.atan2(positionError.y, positionError.x);
+		directionWrap = (((directionToWaypoint - heading - Math.PI) % (Math.PI * 2)) + Math.PI);
+
+		targetSpeed = Math.cos(directionWrap) * positionError.magnitude();
+		drivePower = drivetrainSpeedPID.runPID(targetSpeed, motorVelocities.average);
+
+		targetHeading = directionToWaypoint;
+		if (reverse)
+		{
+			targetHeading += Math.PI;
+		}
+
+		headingWrap = (((targetHeading - heading - Math.PI) % (Math.PI * 2)) + Math.PI);
+		steeringPower = drivetrainHeadingPID.runPID(headingWrap, 0);
 	}
 
-	public void pointAtAngle(double targetAngle)
+	/**
+	 * Gets the desired steering power of the robot, to reach the target waypoint,
+	 * as of the last update.
+	 * 
+	 * @return The power level, from -1 to 1, that the robot needs the steering to
+	 *         be set to.
+	 */
+	public double getSteeringPower()
 	{
-
+		return steeringPower;
 	}
 
+	/**
+	 * Gets the desired drive power of the robot, to reach the target waypoint, as
+	 * of the last update.
+	 * 
+	 * @return The power level, from -1 to 1, that the robot needs the drive to be
+	 *         set to.
+	 */
+	public double getDrivePower()
+	{
+		return drivePower;
+	}
+
+	/**
+	 * Sets the robots current position to a new value, erasing any previous
+	 * position tracking.
+	 * 
+	 * @param newPosition A 2D vector object, containing the desired x and y values
+	 *                    to set the position to.
+	 */
+	public void setPosition(CartesianVector newPosition)
+	{
+		position.copy(newPosition);
+	}
+
+	/**
+	 * Gets the currently tracked position of the robot. This is updated whenever
+	 * updatePosition() or setPosition() are called.
+	 * 
+	 * @return The tracked position of the robot. If updatePosition() has been
+	 *         running, this will reflect the robots position, in inches.
+	 */
+	public CartesianVector getPosition()
+	{
+		return position.clone();
+	}
+
+	/**
+	 * Sets the reverse setting of the robot. This value controls if the robot will
+	 * go to waypoints while driving backwards or forwards.
+	 * 
+	 * @param driveReverse A boolean for if the robot will drive in reverse. When
+	 *                     true, it will drive backwards. When false, it will drive
+	 *                     forwards.
+	 */
+	public void setReverse(boolean driveReverse)
+	{
+		reverse = driveReverse;
+	}
+
+	/**
+	 * Sets the robots current target, which is used by
+	 * updateTargetHeadingAndSpeed().
+	 * 
+	 * @param waypoint A 2D vector object, containing the desired x and y values to
+	 *                 set the target waypoint to.
+	 */
+	public void setWaypoint(final CartesianVector waypoint)
+	{
+		target.copy(waypoint);
+	}
+
+	/**
+	 * A simple check for if the robot is within the configured MAX_WAYPOINT_ERROR
+	 * of the currently set waypoint.
+	 * 
+	 * @return True if the robot position is near the waypoint.
+	 */
 	public boolean hasReachedWaypoint()
 	{
-		return Math.abs(this.distanceError) < PastaConstants.MAX_WAYPOINT_ERROR;
+		return Math.abs(positionError.magnitude()) < UtilitiyConstants.MAX_WAYPOINT_ERROR;
 	}
 
-	public void setPos(double x, double y)
+	/**
+	 * A simple check for if the robot is within the configured MAX_WAYPOINT_ERROR
+	 * of the input point.
+	 * 
+	 * @param point A 2D vector containing the x and y values to check against.
+	 * @return True if the robot position is near the input point.
+	 */
+	public boolean isAtPoint(CartesianVector point)
 	{
-		this.robotX = x;
-		this.robotY = y;
+		return Math.abs(position.getSubtraction(point).magnitude()) < UtilitiyConstants.MAX_WAYPOINT_ERROR;
 	}
+
 }

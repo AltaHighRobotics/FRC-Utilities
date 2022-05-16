@@ -29,7 +29,9 @@ public class ExampleCommand extends CommandBase {
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {}
+  public void execute() {
+    m_subsystem.run();
+  }
 
   // Called once the command ends or is interrupted.
   @Override
