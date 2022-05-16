@@ -4,7 +4,9 @@ A custom addition to WPI Lib
 
 ## Main Features
 
-FRC Utilities includes a PID controller that includes a velocity based control mode, a waypoint based autonomous that a programmer can modify in seconds, and a targeting system that tracks targets and predicts where that target will be in the future. Also included is CoordinateFinder, a program to assist with finding coordinates for an autonomous.
+- PID controller with velocity control and configurable limits
+- A waypoint based autonomous
+- Targeting system with in built target leading, prediction, and other tools
 
 ## Adding Utilities to your FRC project
 
