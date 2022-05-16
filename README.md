@@ -8,7 +8,7 @@ FRC Utilities  is a custom addition to FRC WPI Lib, it includes a better PID con
 
 Download the latest release from the Release side bar and copy the utilities folder to your projects java folder 
 
-<img title="" src="docs/images/FileLocation.png" alt="Happy Christmas" width="109">
+<img title="" src="docs/images/FileLocation.png" alt="File Location" width="109">
 
 #### Use and Documentation
 
@@ -16,7 +16,7 @@ Examples of how to use each class can be found in the [Example Project](ExampleP
 
 - Configurable PID
 
-- Autonomus
+- Autonomous
 
 - Targeting System
 
