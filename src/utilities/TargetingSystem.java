@@ -1,6 +1,7 @@
 package utilities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * A class for creating and tracking a target in 3D space. Also allows for
@@ -10,6 +11,17 @@ import java.util.ArrayList;
  */
 public class TargetingSystem
 {
+	/**
+	 * The callibration data for the system. The key is the distance,
+	 * the vector is the time, velocity, and angle of the shot.
+	 */
+	private final HashMap<Double, CartesianVector> CALIBRATION_DATA;
+
+	/**
+	 * The interpolated data point for the current distance.
+	 */
+    public CartesianVector lerpedData = new CartesianVector(0, 0, 0);
+
 	/**
 	 * The current measured location of the target in 3D space, relative to the
 	 * robot.
@@ -81,7 +93,7 @@ public class TargetingSystem
 	/**
 	 * The distance between the camera and the target's predicted position.
 	 */
-	private double distanceToPredictedGoal;
+	private double distanceToPredictedTarget;
 
 	/**
 	 * The speed the target is moving at, relative to the robot.
@@ -134,27 +146,27 @@ public class TargetingSystem
 	/**
 	 * Equal to the absolute azimuth, but in radians instead of degrees.
 	 */
-	private double azimuthToGoalRadians;
+	private double azimuthToTargetRadians;
 
 	/**
 	 * Equal to the absolute elevation, but in radians instead of degrees.
 	 */
-	private double elevationToGoalRadians;
+	private double elevationToTargetRadians;
 
 	/**
 	 * The distance between the camera and the target.
 	 */
-	private double distanceToGoal;
+	private double distanceToTarget;
 
 	/**
-	 * The measured position of the goal, relative to the robot.
+	 * The measured position of the target, relative to the robot.
 	 */
-	private CartesianVector relativeGoalPosition;
+	private CartesianVector relativeTargetPosition;
 
 	/**
-	 * The measured position of the goal, relative to the field.
+	 * The measured position of the target, relative to the field.
 	 */
-	private CartesianVector absoluteGoalPosition;
+	private CartesianVector absoluteTargetPosition;
 
 	/**
 	 * The location of the camera relative to the robot.
@@ -167,9 +179,9 @@ public class TargetingSystem
 	private final double CAMERA_ELEVATION_ANGLE;
 
 	/**
-	 * The location of the goal (measure this on the actual field for best results).
+	 * The location of the target (measure this on the actual field for best results).
 	 */
-	private final CartesianVector GOAL_POSITION;
+	private final CartesianVector TARGET_POSITION;
 
 	/**
 	 * Creates a new TargetingSystem object with set parameters
@@ -178,8 +190,10 @@ public class TargetingSystem
 	 *                                  robot
 	 * @param cameraElevationAngle      The angle the camera is mounted at, relative
 	 *                                  to horizontal
-	 * @param goalPosition              The location of the goal, measured on the
+	 * @param targetPosition            The location of the target, measured on the
 	 *                                  physical field
+	 * @param calibrationData           The callibration data for the system. The key is the distance,
+	 *									the value is a vector representing the time, velocity, and angle of the shot.
 	 * @param velocityThreshold         The minimum speed that must be reached for
 	 *                                  target leading to be computed
 	 * @param refreshThreshold          The amount of time that must pass without
@@ -190,56 +204,54 @@ public class TargetingSystem
 	 * @param maxAccelerationPrediction The maximum amount of time that acceleration
 	 *                                  should be used in predictions
 	 */
-	public TargetingSystem(CartesianVector cameraPosition, double cameraElevationAngle, CartesianVector goalPosition,
-			double velocityThreshold, int refreshThreshold, int maxMemory, int maxAccelerationPrediction)
+	public TargetingSystem(CartesianVector cameraPosition, double cameraElevationAngle, CartesianVector targetPosition,
+			HashMap<Double, CartesianVector> calibrationData, double velocityThreshold, int refreshThreshold,
+			int maxMemory, int maxAccelerationPrediction)
 	{
 		this.CAMERA_POSITION = cameraPosition;
 		this.CAMERA_ELEVATION_ANGLE = cameraElevationAngle;
-		this.GOAL_POSITION = goalPosition;
+		this.TARGET_POSITION = targetPosition;
+		this.CALIBRATION_DATA = calibrationData;
 		this.velocityThreshold = velocityThreshold;
 		this.refreshThreshold = refreshThreshold;
 		this.maxMemory = maxMemory;
 		this.maxAccelerationPrediction = maxAccelerationPrediction;
-		this.relativeGoalPosition = new CartesianVector(0, 0, 0);
-		this.absoluteGoalPosition = new CartesianVector(0, 0, 0);
-	}
-
-	public void setNewTargetPosition(CartesianVector newPosition)
-	{
-		position.copy(newPosition);
-		updated = true;
-	}
-
-	public void setNewTargetPositionFromTargetingCamera(double robotYaw, double targetingAzimuth,
-			double targetingElevation)
-	{
-		absoluteAzimuthToTarget = targetingAzimuth + robotYaw;
-		azimuthToGoalRadians = Math.toRadians(absoluteAzimuthToTarget);
-
-		absoluteElevationToTarget = targetingElevation + CAMERA_ELEVATION_ANGLE;
-		elevationToGoalRadians = Math.toRadians(absoluteElevationToTarget);
-
-		distanceToGoal = (GOAL_POSITION.z - CAMERA_POSITION.z) / (Math.tan(elevationToGoalRadians));
-		relativeGoalPosition.set(Math.cos(azimuthToGoalRadians) * distanceToGoal,
-				Math.sin(azimuthToGoalRadians) * distanceToGoal);
-		position.copy(relativeGoalPosition);
-
-		updated = true;
+		this.relativeTargetPosition = new CartesianVector(0, 0, 0);
+		this.absoluteTargetPosition = new CartesianVector(0, 0, 0);
 	}
 
 	public CartesianVector getOdometryCalibration(CartesianVector robotPosition)
 	{
-		absoluteGoalPosition = relativeGoalPosition.getAddition(robotPosition);
-		return absoluteGoalPosition.getSubtraction(GOAL_POSITION);
+		absoluteTargetPosition = relativeTargetPosition.getAddition(robotPosition);
+		return absoluteTargetPosition.getSubtraction(TARGET_POSITION);
 	}
 
 	/**
-	 * Updates the target position, and computes the velocity and acceleration of
-	 * the target.
+	 * Updates the target position, velocity, and acceleration.
+	 * Also updates the predicted location and lead position of the target.
 	 * 
+	 * @param robotYaw           The yaw of the robot (degrees).
+	 * @param targetingAzimuth   The azimuth angle reported by the targeting camera (degrees).
+	 * @param targetingElevation The elevation angle reported by the targeting camera (degrees).
 	 */
-	public void updateTarget()
+	public void updateTarget(double robotYaw, double targetingAzimuth,
+			double targetingElevation)
 	{
+		if (targetingElevation != 0)
+		{
+			absoluteAzimuthToTarget = targetingAzimuth + robotYaw;
+			azimuthToTargetRadians = Math.toRadians(absoluteAzimuthToTarget);
+	
+			absoluteElevationToTarget = targetingElevation + CAMERA_ELEVATION_ANGLE;
+			elevationToTargetRadians = Math.toRadians(absoluteElevationToTarget);
+	
+			distanceToTarget = (TARGET_POSITION.z - CAMERA_POSITION.z) / (Math.tan(elevationToTargetRadians));
+			relativeTargetPosition.set(Math.cos(azimuthToTargetRadians) * distanceToTarget,
+					Math.sin(azimuthToTargetRadians) * distanceToTarget);
+			position.copy(relativeTargetPosition);
+	
+			updated = true;
+		}
 		if (updated)
 		{
 			if (age > refreshThreshold)
@@ -273,25 +285,11 @@ public class TargetingSystem
 		age = age + 1;
 		predictedPosition.add(averageVelocity
 				.getAddition(averageAcceleration.getMultiplication(Math.min(age, maxAccelerationPrediction))));
-	}
-
-	public void updateTargetLeadPosition(double timeToTarget)
-	{
-		leadPosition = predictedPosition.getAddition(averageVelocity.getMultiplication(timeToTarget));
-	}
-
-	/**
-	 * Calculates the distance between the input location and the target location.
-	 * 
-	 * @param robotLocation The location of the robot on the field, relative to the
-	 *                      target.
-	 * @return The distance between the robot and the target, in the form of a 3D
-	 *         vector.
-	 */
-	public double getTargetDistance(CartesianVector robotLocation)
-	{
-		distanceToPredictedGoal = predictedPosition.getSubtraction(robotLocation).magnitude();
-		return distanceToPredictedGoal;
+		distanceToPredictedTarget = predictedPosition.magnitude();
+		lerpData(distanceToPredictedTarget);
+		leadPosition = predictedPosition.getAddition(averageVelocity.getMultiplication(lerpedData.x));
+		distanceToPredictedTarget = leadPosition.magnitude();
+		lerpData(distanceToPredictedTarget);
 	}
 
 	/**
@@ -335,4 +333,31 @@ public class TargetingSystem
 		}
 		return vectorList;
 	}
+
+	/**
+	 * Interpolates between calibration points by a distance.
+	 * 
+	 * @param targetDistance The distance to create an interpolated point at.
+	 */
+    public void lerpData(double targetDistance)
+    {
+        double lowerDist = 0;
+        double upperDist = 999999;
+        for (double dist : CALIBRATION_DATA.keySet())
+        {
+            if (dist < targetDistance && dist > lowerDist)
+            {
+                lowerDist = dist;
+            } else if (dist > targetDistance && dist < upperDist)
+            {
+                upperDist = dist;
+            }
+        }
+        double distRange = upperDist - lowerDist;
+        double distPercent = (targetDistance - lowerDist) / distRange;
+        CartesianVector lowerData = CALIBRATION_DATA.get(lowerDist);
+		lerpedData = CALIBRATION_DATA.get(upperDist).getSubtraction(lowerData);
+		lerpedData.multiply(distPercent);
+        lerpedData.getAddition(lowerData);
+    }
 }
