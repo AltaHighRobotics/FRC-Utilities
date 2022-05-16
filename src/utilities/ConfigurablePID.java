@@ -121,6 +121,36 @@ public class ConfigurablePID
 	private double maxOutput;
 
 	/**
+	 * If the proportional component should be clamped.
+	 * Automatically set when configuring limits.
+	 */
+	private boolean clampProportional;
+
+	/**
+	 * If the integral component should be clamped.
+	 * Automatically set when configuring limits.
+	 */
+	private boolean clampIntegral;
+
+	/**
+	 * If the derivative component should be clamped.
+	 * Automatically set when configuring limits.
+	 */
+	private boolean clampDerivative;
+
+	/**
+	 * If the output should be clamped.
+	 * Automatically set when configuring limits.
+	 */
+	private boolean clampOutput;
+
+	/**
+	 * If the controller should run in velocity mode.
+	 * Automatically set when configuring speed.
+	 */
+	private boolean velocityMode;
+
+	/**
 	 * Creates a new Configurable PID with default parameters
 	 */
 	public ConfigurablePID()
@@ -142,6 +172,33 @@ public class ConfigurablePID
 	}
 
 	/**
+	 * Creates a new configurable PID controller using a PIDConfiguration.
+	 * 
+	 * @param configuration A PIDConfiguration to use the settings from.
+	 */
+	public ConfigurablePID(PIDConfiguration configuration)
+	{
+		this.proportionalGain = configuration.proportionalGain;
+		this.integralGain = configuration.integralGain;
+		this.derivativeGain = configuration.derivativeGain;
+        this.speed = configuration.speed;
+        this.errorTolerance = configuration.errorTolerance;
+        this.minProportional = configuration.minProportional;
+        this.maxProportional = configuration.maxProportional;
+        this.minIntegral = configuration.minIntegral;
+        this.maxIntegral = configuration.maxIntegral;
+        this.minDerivative = configuration.minDerivative;
+        this.maxDerivative = configuration.maxDerivative;
+        this.minOutput = configuration.minOutput;
+        this.maxOutput = configuration.maxOutput;
+		this.velocityMode = this.speed != 0;
+		this.clampOutput = this.minOutput != 0 || this.maxOutput != 0;
+		this.clampProportional = this.minProportional != 0 || this.maxProportional != 0;
+		this.clampIntegral = this.minIntegral != 0 || this.maxIntegral != 0;
+		this.clampDerivative = this.minDerivative != 0 || this.maxDerivative != 0;
+	}
+
+	/**
 	 * Computes a new output based on the set point and process variable. If a speed
 	 * has been set, the output will be based on speed.
 	 * 
@@ -153,7 +210,7 @@ public class ConfigurablePID
 	 */
 	public double runPID(double setpoint, double processVariable)
 	{
-		if (speed != 0)
+		if (velocityMode)
 		{
 			processVariableVelocity = processVariable - pastProcessVariable;
 			pastProcessVariable = processVariable;
@@ -172,25 +229,25 @@ public class ConfigurablePID
 		pastError = currentError;
 
 		proportional = currentError * proportionalGain;
-		if (minProportional != 0 || maxProportional != 0)
+		if (clampProportional)
 		{
 			proportional = clamp(proportional, minProportional, maxProportional);
 		}
 
 		integral += currentError * integralGain;
-		if (minIntegral != 0 || maxIntegral != 0)
+		if (clampIntegral)
 		{
 			integral = clamp(integral, minIntegral, maxIntegral);
 		}
 
 		derivative = errorDelta * derivativeGain;
-		if (minDerivative != 0 || maxDerivative != 0)
+		if (clampDerivative)
 		{
 			derivative = clamp(derivative, minDerivative, maxDerivative);
 		}
 
 		output = proportional + integral + derivative;
-		if (minOutput != 0 || maxOutput != 0)
+		if (clampOutput)
 		{
 			output = clamp(output, minOutput, maxOutput);
 		}
@@ -208,6 +265,7 @@ public class ConfigurablePID
 	public void setSpeed(double newSpeed)
 	{
 		speed = newSpeed;
+		velocityMode = speed != 0;
 	}
 
 	/**
@@ -218,6 +276,7 @@ public class ConfigurablePID
 	public void setMinOutput(double newMinOutput)
 	{
 		minOutput = newMinOutput;
+		clampOutput = minOutput != 0 || maxOutput != 0;
 	}
 
 	/**
@@ -228,6 +287,7 @@ public class ConfigurablePID
 	public void setMaxOutput(double newMaxOutput)
 	{
 		maxOutput = newMaxOutput;
+		clampOutput = minOutput != 0 || maxOutput != 0;
 	}
 
 	/**
@@ -240,6 +300,7 @@ public class ConfigurablePID
 	{
 		minOutput = newMinOutput;
 		maxOutput = newMaxOutput;
+		clampOutput = minOutput != 0 || maxOutput != 0;
 	}
 
 	/**
@@ -250,6 +311,7 @@ public class ConfigurablePID
 	public void setMinProportional(double newMinProportional)
 	{
 		minProportional = newMinProportional;
+		clampProportional = minProportional != 0 || maxProportional != 0;
 	}
 
 	/**
@@ -260,6 +322,7 @@ public class ConfigurablePID
 	public void setMaxProportional(double newMaxProportional)
 	{
 		maxProportional = newMaxProportional;
+		clampProportional = minProportional != 0 || maxProportional != 0;
 	}
 
 	/**
@@ -272,6 +335,7 @@ public class ConfigurablePID
 	{
 		minProportional = newMinProportional;
 		maxProportional = newMaxProportional;
+		clampProportional = minProportional != 0 || maxProportional != 0;
 	}
 
 	/**
@@ -282,6 +346,7 @@ public class ConfigurablePID
 	public void setMinIntegral(double newMinIntegral)
 	{
 		minIntegral = newMinIntegral;
+		clampIntegral = minIntegral != 0 || maxIntegral != 0;
 	}
 
 	/**
@@ -292,6 +357,7 @@ public class ConfigurablePID
 	public void setMaxIntegral(double newMaxIntegral)
 	{
 		maxIntegral = newMaxIntegral;
+		clampIntegral = minIntegral != 0 || maxIntegral != 0;
 	}
 
 	/**
@@ -304,6 +370,7 @@ public class ConfigurablePID
 	{
 		minIntegral = newMinIntegral;
 		maxIntegral = newMaxIntegral;
+		clampIntegral = minIntegral != 0 || maxIntegral != 0;
 	}
 
 	/**
@@ -314,6 +381,7 @@ public class ConfigurablePID
 	public void setMinderivative(double newMinDerivative)
 	{
 		minDerivative = newMinDerivative;
+		clampDerivative = minDerivative != 0 || maxDerivative != 0;
 	}
 
 	/**
@@ -324,6 +392,7 @@ public class ConfigurablePID
 	public void setMaxderivative(double newMaxDerivative)
 	{
 		maxDerivative = newMaxDerivative;
+		clampDerivative = minDerivative != 0 || maxDerivative != 0;
 	}
 
 	/**
@@ -336,6 +405,7 @@ public class ConfigurablePID
 	{
 		minDerivative = newMinDerivative;
 		maxDerivative = newMaxDerivative;
+		clampDerivative = minDerivative != 0 || maxDerivative != 0;
 	}
 
 	/**
@@ -415,12 +485,12 @@ public class ConfigurablePID
 	}
 
 	/**
-	 * clamp java doc
+	 * Limits the input value to the range of min to max.
 	 * 
-	 * @param value
-	 * @param min
-	 * @param max
-	 * @return
+	 * @param value The value to be clamped.
+	 * @param min   The smallest value to return.
+	 * @param max   The largest value to return.
+	 * @return      The value, within min and max.
 	 */
 	private double clamp(double value, double min, double max)
 	{

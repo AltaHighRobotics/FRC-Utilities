@@ -90,6 +90,20 @@ public class CopyPastAutonomous
 	private CartesianVector motorVelocities;
 
 	/**
+	 * The ratio between drive encoder units and full rotations of the drive motor.
+	 * For example, a falcon 500 integrated encoder has 2048 steps per rotation,
+	 * so for drivetrains running falcon 500s, set this to 2048.
+	 */
+	private final int ENCODER_UNITS_PER_ROTATION;
+
+	/**
+	 * The ratio between full rotations of the drive motor and inches travled.
+	 * For example, for 4 inch wheel that is direct driven by the drive motor,
+	 * the correct value would be PI * 4.
+	 */
+	private final double INCHES_PER_ROTATION;
+
+	/**
 	 * A PID controller for computing the steering power.
 	 */
 	private final ConfigurablePID drivetrainHeadingPID;
@@ -100,13 +114,14 @@ public class CopyPastAutonomous
 	private final ConfigurablePID drivetrainSpeedPID;
 
 	/**
-	 * Creates a new CopyPastAutonomous using two ConfigurablePID objects stored
-	 * inside of an array
+	 * Creates a new CopyPastAutonomous with the set ratio constants and PID configurations.
 	 * 
-	 * @param PIDArray an array containing two ConfigurablePID objects, a heading
-	 *                 PID and a speed PID
+	 * @param encoderUnitsPerRotation The ratio between drive encoder units and full rotations of the drive motor.
+	 * @param inchesPerRotation       The ratio between full rotations of the drive motor and inches travled.
+	 * @param headingPIDConfig        A PIDConfiguration with settings for the heading controller.
+	 * @param speedPIDConfig          A PIDConfiguration with settings for the speed controller.
 	 */
-	public CopyPastAutonomous(ConfigurablePID[] PIDArray)
+	public CopyPastAutonomous(int encoderUnitsPerRotation, double inchesPerRotation, PIDConfiguration headingPIDConfig, PIDConfiguration speedPIDConfig)
 	{
 		this.position = new CartesianVector(0, 0);
 		this.velocity = new CartesianVector(0, 0);
@@ -117,8 +132,11 @@ public class CopyPastAutonomous
 		this.previousMotorPositions = new CartesianVector(0, 0);
 		this.motorVelocities = new CartesianVector(0, 0);
 
-		this.drivetrainHeadingPID = new ConfigurablePID();
-		this.drivetrainSpeedPID = new ConfigurablePID();
+		this.ENCODER_UNITS_PER_ROTATION = encoderUnitsPerRotation;
+		this.INCHES_PER_ROTATION = inchesPerRotation;
+
+		this.drivetrainHeadingPID = new ConfigurablePID(headingPIDConfig);
+		this.drivetrainSpeedPID = new ConfigurablePID(speedPIDConfig);
 	}
 
 	/**
@@ -138,11 +156,11 @@ public class CopyPastAutonomous
 		steeringPower = 0;
 		heading = Math.toRadians(yaw);
 
-		currentMotorPositions.set(leftMotorEncoderPos / UtilitiyConstants.ENCODER_UNITS_PER_ROTATION,
-				rightMotorEncoderPos / UtilitiyConstants.ENCODER_UNITS_PER_ROTATION);
+		currentMotorPositions.set(leftMotorEncoderPos / ENCODER_UNITS_PER_ROTATION,
+				rightMotorEncoderPos / ENCODER_UNITS_PER_ROTATION);
 		motorVelocities = currentMotorPositions.getSubtraction(previousMotorPositions);
 		previousMotorPositions.copy(currentMotorPositions);
-		motorVelocities.multiply(UtilitiyConstants.INCHES_PER_ROTATION);
+		motorVelocities.multiply(INCHES_PER_ROTATION);
 		motorVelocities.average();
 
 		velocity.set((Math.cos(heading) * motorVelocities.average), (Math.sin(heading) * motorVelocities.average));
