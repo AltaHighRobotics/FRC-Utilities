@@ -12,8 +12,11 @@ public class Panel extends JPanel
 {
 	private Controller app;
 	private SpringLayout layout;
+	private SpringLayout layout_1;
 	private JLabel xLabel;
 	private JLabel yLabel;
+	private ImageIcon playingfield;
+	private JLabel imageLabel;
 
 	public Panel(Controller app)
 	{
@@ -22,7 +25,8 @@ public class Panel extends JPanel
 		this.layout = new SpringLayout();
 		this.xLabel = new JLabel("x: ");
 		this.yLabel = new JLabel("y: ");
-
+		this.playingfield = new ImageIcon(getClass().getResource("/placeholder.png"));
+		this.layout_1 = new SpringLayout();
 		setupPanel();
 		setupListeners();
 		setupLayout();
@@ -32,12 +36,23 @@ public class Panel extends JPanel
 	{
 		this.setPreferredSize(new Dimension(800,600));
 		this.add(xLabel);
+		this.imageLabel = new JLabel("");
+		this.add(imageLabel);
+		imageLabel.setIcon(playingfield);
 		this.add(yLabel);
+		this.setLayout(layout_1);
+		
 	}
 
+	//319x649
 	private void setupLayout()
 	{
-
+		layout_1.putConstraint(SpringLayout.NORTH, xLabel, 0, SpringLayout.NORTH, yLabel);
+		layout_1.putConstraint(SpringLayout.WEST, xLabel, 78, SpringLayout.WEST, this);
+		layout_1.putConstraint(SpringLayout.NORTH, yLabel, 53, SpringLayout.NORTH, this);
+		layout_1.putConstraint(SpringLayout.WEST, yLabel, 238, SpringLayout.WEST, this);
+		layout_1.putConstraint(SpringLayout.NORTH, imageLabel, 182, SpringLayout.NORTH, this);
+		layout_1.putConstraint(SpringLayout.WEST, imageLabel, 202, SpringLayout.WEST, this);
 	}
 
 	private void setupListeners()

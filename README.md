@@ -21,10 +21,8 @@ Download the latest release from the Release side bar and copy the utilities fol
 ## Use and Documentation
 
 - [Example Project](ExampleProject/src/main/java/frc/robot)
-
-- [Java Docs](docs/HTML)
-
-- [Detailed, Step by Step Documentaion](docs/MarkDown/DetailedDocs.md)
+- [Java Docs](docs/html)
+- [Detailed, Step by Step Documentaion](docs/markdown/DetailedDocs.md)
 
 ## Help or report a bug
 
