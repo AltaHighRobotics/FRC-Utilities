@@ -274,7 +274,7 @@ public class TargetingSystem
 			accelerations = manageList(accelerations, acceleration, maxMemory);
 			averageAcceleration = avgVectorList(accelerations);
 			previousVelocity.copy(averageVelocity);
-			speed = averageVelocity.magnitude();
+			speed = averageVelocity.magnitude3D();
 			if (speed < velocityThreshold)
 			{
 				averageVelocity.set(0, 0, 0);
@@ -286,12 +286,12 @@ public class TargetingSystem
 		age = age + 1;
 		predictedPosition.add(averageVelocity
 				.getAddition(averageAcceleration.getMultiplication(Math.min(age, maxAccelerationPrediction))));
-		distanceToPredictedTarget = predictedPosition.magnitude();
+		distanceToPredictedTarget = predictedPosition.magnitude3D();
 		lerpedData = CALIBRATION_DATA.get(distanceToPredictedTarget);
 		SmartDashboard.putNumber("Lead Dist", distanceToPredictedTarget);
 		SmartDashboard.putNumber("Lead Time", lerpedData.x);
 		leadPosition = predictedPosition.getAddition(averageVelocity.getMultiplication(lerpedData.x));
-		distanceToPredictedTarget = leadPosition.magnitude();
+		distanceToPredictedTarget = leadPosition.magnitude3D();
 		lerpedData = CALIBRATION_DATA.get(distanceToPredictedTarget);
 		CartesianVector newVelocity = averageVelocity.getAddition(averageAcceleration.getMultiplication(Math.min(lerpedData.x,maxAccelerationPrediction)));
 		leadPosition = predictedPosition.getAddition(newVelocity.getMultiplication(lerpedData.x));

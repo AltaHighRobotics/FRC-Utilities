@@ -26,6 +26,24 @@ public class CartesianVector
 	public double z;
 
 	/**
+	 * The a component of the vector. If a vector is created with only threee
+	 * parameters, this value will remain 0
+	 */
+	public double a;
+
+	/**
+	 * The b component of the vector. If a vector is created with only four
+	 * parameters, this value will remain 0
+	 */
+	public double b;
+
+	/**
+	 * The c component of the vector. If a vector is created with only five
+	 * parameters, this value will remain 0
+	 */
+	public double c;
+
+	/**
 	 * The direction of the vector, in radians. This is 0 unless the direction
 	 * function is called.
 	 */
@@ -44,10 +62,22 @@ public class CartesianVector
 	public double average;
 
 	/**
-	 * If the vector is created with 3 values, this will be true. Otherwise, it will
-	 * be false.
+	 * The amount of dimensions the vector was created with.
 	 */
-	public final boolean is3D;
+	public final int dimensions;
+
+	/**
+	 * Makes a 2D vector object with the specified values.
+	 * 
+	 * @param initialX A double representing the initial x value.
+	 * @param initialY A double representing the initial y value.
+	 */
+	public CartesianVector(double initialX, double initialY)
+	{
+		this.x = initialX;
+		this.y = initialY;
+		this.dimensions = 2;
+	}
 
 	/**
 	 * Makes a 3D vector object with the specified values.
@@ -61,56 +91,138 @@ public class CartesianVector
 		this.x = initialX;
 		this.y = initialY;
 		this.z = initialZ;
-		this.is3D = true;
+		this.dimensions = 3;
 	}
 
 	/**
-	 * Makes a 2D vector object with the specified values.
+	 * Makes a 4D vector object with the specified values.
 	 * 
 	 * @param initialX A double representing the initial x value.
 	 * @param initialY A double representing the initial y value.
+	 * @param initialZ A double representing the initial z value.
+	 * @param initialA A double representing the initial a value.
 	 */
-	public CartesianVector(double initialX, double initialY)
+	public CartesianVector(double initialX, double initialY, double initialZ, double initialA)
 	{
-		x = initialX;
-		y = initialY;
-		z = 0;
-		is3D = false;
+		this.x = initialX;
+		this.y = initialY;
+		this.z = initialZ;
+		this.a = initialA;
+		this.dimensions = 4;
 	}
 
+	/**
+	 * Makes a 5D vector object with the specified values.
+	 * 
+	 * @param initialX A double representing the initial x value.
+	 * @param initialY A double representing the initial y value.
+	 * @param initialZ A double representing the initial z value.
+	 * @param initialA A double representing the initial a value.
+	 * @param initialB A double representing the initial b value.
+	 */
+	public CartesianVector(double initialX, double initialY, double initialZ, double initialA, double initialB)
+	{
+		this.x = initialX;
+		this.y = initialY;
+		this.z = initialZ;
+		this.a = initialA;
+		this.b = initialB;
+		this.dimensions = 5;
+	}
+
+	/**
+	 * Makes a 6D vector object with the specified values.
+	 * 
+	 * @param initialX A double representing the initial x value.
+	 * @param initialY A double representing the initial y value.
+	 * @param initialZ A double representing the initial z value.
+	 * @param initialA A double representing the initial a value.
+	 * @param initialB A double representing the initial b value.
+	 * @param initialC A double representing the initial c value.
+	 */
+	public CartesianVector(double initialX, double initialY, double initialZ, double initialA, double initialB, double initialC)
+	{
+		this.x = initialX;
+		this.y = initialY;
+		this.z = initialZ;
+		this.a = initialA;
+		this.b = initialB;
+		this.c = initialC;
+		this.dimensions = 6;
+	}
+	
 	/**
 	 * Returns a vector object with the specified values and forces it to match the
 	 * given type.
 	 * 
-	 * @param force3D  If this is false, the input z value will be discarded.
+	 * @param forceDimension The amount of dimensions the new vector should have.
 	 * @param initialX A double representing the initial x value.
 	 * @param initialY A double representing the initial y value.
 	 * @param initialZ A double representing the initial z value.
+	 * @param initialA A double representing the initial a value.
+	 * @param initialB A double representing the initial b value.
+	 * @param initialC A double representing the initial c value.
 	 * @return A vector with the same values as the inputs, and with the same type
 	 *         as the input (2D or 3D).
 	 */
-	private CartesianVector vectorType(boolean force3D, double initialX, double initialY, double initialZ)
+	private CartesianVector vectorType(int forceDimension, double initialX, double initialY, double initialZ, double initialA, double initialB, double initialC)
 	{
-		if (force3D)
+		switch (forceDimension)
 		{
-			return new CartesianVector(initialX, initialY, initialZ);
+			case 2:
+				return new CartesianVector(initialX, initialY);
+			case 3:
+				return new CartesianVector(initialX, initialY, initialZ);
+			case 4:
+				return new CartesianVector(initialX, initialY, initialZ, initialA);
+			case 5:
+				return new CartesianVector(initialX, initialY, initialZ, initialA, initialB);
+			case 6:
+				return new CartesianVector(initialX, initialY, initialZ, initialA, initialB, initialC);
+			default:
+				return new CartesianVector(initialX, initialY, initialZ, initialA, initialB, initialC);
 		}
-		return new CartesianVector(initialX, initialY);
 	}
 
 	/**
 	 * Copies the value of an existing vector into the parent vector.
 	 * 
-	 * @param a The vector to be copied.
+	 * @param vector The vector to be copied.
 	 */
-	public void copy(CartesianVector a)
+	public void copy(CartesianVector vector)
 	{
-		x = a.x;
-		y = a.y;
-		if (is3D)
+		x = vector.x;
+		y = vector.y;
+		for (int dimension = 3; dimension <= dimensions; dimension++)
 		{
-			z = a.z;
+			switch (dimensions)
+			{
+				case 3:
+					z = vector.z;
+					break;
+				case 4:
+					a = vector.a;
+					break;
+				case 5:
+					b = vector.b;
+					break;
+				case 6:
+					c = vector.c;
+					break;
+			}
 		}
+	}
+
+	/**
+	 * Sets an existing vector to the specified values.
+	 * 
+	 * @param newX A double representing the new x value.
+	 * @param newY A double representing the new y value.
+	 */
+	public void set(double newX, double newY)
+	{
+		x = newX;
+		y = newY;
 	}
 
 	/**
@@ -132,11 +244,53 @@ public class CartesianVector
 	 * 
 	 * @param newX A double representing the new x value.
 	 * @param newY A double representing the new y value.
+	 * @param newZ A double representing the new z value.
+	 * @param newA A double representing the new a value.
 	 */
-	public void set(double newX, double newY)
+	public void set(double newX, double newY, double newZ, double newA)
 	{
 		x = newX;
 		y = newY;
+		z = newZ;
+		a = newA;
+	}
+
+	/**
+	 * Sets an existing vector to the specified values.
+	 * 
+	 * @param newX A double representing the new x value.
+	 * @param newY A double representing the new y value.
+	 * @param newZ A double representing the new z value.
+	 * @param newA A double representing the new a value.
+	 * @param newB A double representing the new b value.
+	 */
+	public void set(double newX, double newY, double newZ, double newA, double newB)
+	{
+		x = newX;
+		y = newY;
+		z = newZ;
+		a = newA;
+		b = newB;
+	}
+
+	/**
+	 * Sets an existing vector to the specified values.
+	 * 
+	 * @param newX A double representing the new x value.
+	 * @param newY A double representing the new y value.
+	 * @param newZ A double representing the new z value.
+	 * @param newA A double representing the new a value.
+	 * @param newB A double representing the new b value.
+	 * @param newC A double representing the new c value.
+	 */
+	public void set(double newX, double newY, double newZ, double newA, double newB, double newC)
+	{
+		x = newX;
+		y = newY;
+		z = newZ;
+		a = newA;
+		b = newB;
+		c = newC;
 	}
 
 	/**
@@ -146,33 +300,33 @@ public class CartesianVector
 	 */
 	public CartesianVector clone()
 	{
-		return vectorType(is3D, x, y, z);
+		return vectorType(dimensions, x, y, z, a, b, c);
 	}
 
 	/**
 	 * Gets the result of adding another vector to the parent vector. This function
 	 * does NOT modify the parent vector.
 	 * 
-	 * @param a The vector to add to the parent.
+	 * @param vector The vector to add to the parent.
 	 * @return A new vector containing the result of the addition. The result will
-	 *         be the same type as the parent (2D or 3D).
+	 *         have the same dimensions as the parent.
 	 */
-	public CartesianVector getAddition(CartesianVector a)
+	public CartesianVector getAddition(CartesianVector vector)
 	{
-		return vectorType(is3D, x + a.x, y + a.y, z + a.z);
+		return vectorType(dimensions, x + vector.x, y + vector.y, z + vector.z, a + vector.a, b + vector.b, c + vector.c);
 	}
 
 	/**
 	 * Gets the result of subtracting another vector from the parent vector. This
 	 * function does NOT modify the parent vector.
 	 * 
-	 * @param a The vector to subtract from the parent.
-	 * @return A new vector containing the result of the subtraction. The result
-	 *         will be the same type as the parent (2D or 3D).
+	 * @param vector The vector to subtract from the parent.
+	 * @return A new vector containing the result of the subtraction. The result will
+	 *         have the same dimensions as the parent.
 	 */
-	public CartesianVector getSubtraction(CartesianVector a)
+	public CartesianVector getSubtraction(CartesianVector vector)
 	{
-		return vectorType(is3D, x - a.x, y - a.y, z - a.z);
+		return vectorType(dimensions, x - vector.x, y - vector.y, z - vector.z, a - vector.a, b - vector.b, c - vector.c);
 	}
 
 	/**
@@ -181,12 +335,12 @@ public class CartesianVector
 	 * 
 	 * @param scalar A double that will be used to multiply each component of the
 	 *               parent vector
-	 * @return A new vector3D containing the result of the multiplication. The
-	 *         result will be the same type as the parent (2D or 3D).
+	 * @return A new vector containing the result of the multiplication. The result will
+	 *         have the same dimensions as the parent.
 	 */
 	public CartesianVector getMultiplication(double scalar)
 	{
-		return vectorType(is3D, x * scalar, y * scalar, z * scalar);
+		return vectorType(dimensions, x * scalar, y * scalar, z * scalar, a * scalar, b * scalar, c * scalar);
 	}
 
 	/**
@@ -195,12 +349,12 @@ public class CartesianVector
 	 * 
 	 * @param scalar A double that will be used to divide each component of the
 	 *               parent vector.
-	 * @return A new vector3D containing the result of the division. The result will
-	 *         be the same type as the parent (2D or 3D).
+	 * @return A new vector containing the result of the division. The result will
+	 *         have the same dimensions as the parent.
 	 */
 	public CartesianVector getDivision(double scalar)
 	{
-		return vectorType(is3D, x / scalar, y / scalar, z / scalar);
+		return vectorType(dimensions, x / scalar, y / scalar, z / scalar, a / scalar, b / scalar, c / scalar);
 	}
 
 	/**
@@ -214,22 +368,36 @@ public class CartesianVector
 	 */
 	public CartesianVector getNormalization()
 	{
-		return getDivision(magnitude());
+		return getDivision(magnitude3D());
 	}
 
 	/**
 	 * Adds another vector to the parent vector. This function DOES modify the
 	 * parent vector.
 	 * 
-	 * @param a The vector to add to the parent.
+	 * @param vector The vector to add to the parent.
 	 */
-	public void add(CartesianVector a)
+	public void add(CartesianVector vector)
 	{
-		x += a.x;
-		y += a.y;
-		if (is3D)
+		x += vector.x;
+		y += vector.y;
+		for (int dimension = 3; dimension < dimensions; dimension++)
 		{
-			z += a.z;
+			switch (dimensions)
+			{
+				case 3:
+					z += vector.z;
+					break;
+				case 4:
+					a += vector.a;
+					break;
+				case 5:
+					b += vector.b;
+					break;
+				case 6:
+					c += vector.c;
+					break;
+			}
 		}
 	}
 
@@ -237,15 +405,29 @@ public class CartesianVector
 	 * Subtracts another vector to the parent vector. This function DOES modify the
 	 * parent vector.
 	 * 
-	 * @param a The vector to subtract from the parent.
+	 * @param vector The vector to subtract from the parent.
 	 */
-	public void subtract(CartesianVector a)
+	public void subtract(CartesianVector vector)
 	{
-		x -= a.x;
-		y -= a.y;
-		if (is3D)
+		x -= vector.x;
+		y -= vector.y;
+		for (int dimension = 3; dimension < dimensions; dimension++)
 		{
-			z -= a.z;
+			switch (dimensions)
+			{
+				case 3:
+					z -= vector.z;
+					break;
+				case 4:
+					a -= vector.a;
+					break;
+				case 5:
+					b -= vector.b;
+					break;
+				case 6:
+					c -= vector.c;
+					break;
+			}
 		}
 	}
 
@@ -260,9 +442,23 @@ public class CartesianVector
 	{
 		x *= scalar;
 		y *= scalar;
-		if (is3D)
+		for (int dimension = 3; dimension < dimensions; dimension++)
 		{
-			z *= scalar;
+			switch (dimensions)
+			{
+				case 3:
+					z *= scalar;
+					break;
+				case 4:
+					a *= scalar;
+					break;
+				case 5:
+					b *= scalar;
+					break;
+				case 6:
+					c *= scalar;
+					break;
+			}
 		}
 	}
 
@@ -277,9 +473,23 @@ public class CartesianVector
 	{
 		x /= scalar;
 		y /= scalar;
-		if (is3D)
+		for (int dimension = 3; dimension < dimensions; dimension++)
 		{
-			z /= scalar;
+			switch (dimensions)
+			{
+				case 3:
+					z /= scalar;
+					break;
+				case 4:
+					a /= scalar;
+					break;
+				case 5:
+					b /= scalar;
+					break;
+				case 6:
+					c /= scalar;
+					break;
+			}
 		}
 	}
 
@@ -290,7 +500,7 @@ public class CartesianVector
 	 */
 	public void normalize()
 	{
-		divide(magnitude());
+		divide(magnitude3D());
 	}
 
 	/**
@@ -300,7 +510,20 @@ public class CartesianVector
 	 *         is also stored in the parent to avoid extra calculations when
 	 *         possible.
 	 */
-	public double magnitude()
+	public double magnitude2D()
+	{
+		magnitude = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+		return magnitude;
+	}
+
+	/**
+	 * Calculates magnitude of the parent vector.
+	 * 
+	 * @return A double representing the magnitude of the parent vector. This value
+	 *         is also stored in the parent to avoid extra calculations when
+	 *         possible.
+	 */
+	public double magnitude3D()
 	{
 		magnitude = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
 		return magnitude;
@@ -313,7 +536,7 @@ public class CartesianVector
 	 *         This value is also stored in the parent to avoid extra calculations
 	 *         when possible.
 	 */
-	public double direction()
+	public double direction2D()
 	{
 		direction = Math.atan2(y, x);
 		return direction;
@@ -329,14 +552,8 @@ public class CartesianVector
 	 */
 	public double average()
 	{
-		average = x + y + z;
-		if (is3D)
-		{
-			average = average / 3;
-		} else
-		{
-			average = average / 2;
-		}
+		average = x + y + z + a + b + c;
+		average /= dimensions;
 		return average;
 	}
 }

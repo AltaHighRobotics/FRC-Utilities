@@ -9,23 +9,23 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import utilities.CopyPastAutonomous;
+import utilities.AutonomousRobot;
 import utilities.TargetingSystem;
 
 public class ExampleAutoSub extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
-  public final CopyPastAutonomous ExampleAuto = new CopyPastAutonomous(5, 1, 1, Constants.HEADING_PID_CONFIG, Constants.DRIVE_PID_CONFIG);
+  public final AutonomousRobot ExampleAuto = new AutonomousRobot(1, 1, 1, Constants.HEADING_PID_CONFIG, Constants.DRIVE_PID_CONFIG);
   private final TargetingSystem targetingSystem = new TargetingSystem(Constants.CAMERA_POSITION, 0, Constants.GOAL_POSITION, Constants.SHOOTER_CALIBRATION, 0.05, 100, 30, 7);
   private Rotation2d rotation = new Rotation2d();
   private int waypointIndex;
   private int heldCargo = 1;
-  private int shootTimer;
   private double leftEncoder;
   private double rightEncoder;
+  public double pitch;
+  public double roll;
   public double yaw;
   private final Field2d m_field = new Field2d();
   public ExampleAutoSub() {
-    ExampleAuto.setWaypoint(Constants.CARGO_POSITIONS[0]);
     ExampleAuto.setPosition(Constants.START_POSITIONS[0]);
     SmartDashboard.putData("Field", m_field);
   }
@@ -37,31 +37,24 @@ public class ExampleAutoSub extends SubsystemBase {
   }
 
   public void run() {
-    ExampleAuto.updateRobotPositon(leftEncoder, rightEncoder, yaw);
+    ExampleAuto.updateRobotPositon(leftEncoder, rightEncoder, pitch, roll, yaw);
     if (heldCargo < 2)
     {
-      shootTimer = 0;
-      ExampleAuto.updateTargetHeadingAndSpeed();
-    } else if (ExampleAuto.pointAtWaypoint(Constants.GOAL_POSITION))
-    {
-      shootTimer ++;
-      if (shootTimer > 250)
+      if (ExampleAuto.goToWaypoint(Constants.CARGO_POSITIONS[waypointIndex]) > 30)
       {
-        heldCargo = 0;
+        heldCargo += Constants.CARGO_POSITIONS[waypointIndex].a;
+        waypointIndex = Math.min(waypointIndex + 1,Constants.CARGO_POSITIONS.length-1);
       }
-    }
-    if (ExampleAuto.hasReachedWaypoint())
+    } else if (ExampleAuto.pointAtWaypoint(Constants.GOAL_POSITION) > 150)
     {
-      waypointIndex = Math.min(waypointIndex + 1,Constants.CARGO_POSITIONS.length-1);
-      heldCargo ++;
-      ExampleAuto.setWaypoint(Constants.CARGO_POSITIONS[waypointIndex]);
+      heldCargo = 0;
     }
     leftEncoder += ExampleAuto.getDrivePower() + ExampleAuto.getSteeringPower()/10;
     rightEncoder += ExampleAuto.getDrivePower() - ExampleAuto.getSteeringPower()/10;
     yaw = yaw + ExampleAuto.getSteeringPower()*3;
     SmartDashboard.putNumber("Target Angle", Math.toDegrees(ExampleAuto.directionToWaypoint));
     SmartDashboard.putNumber("Robot Angle", yaw);
-    targetingSystem.updateTarget(yaw, -yaw- Math.toDegrees(Constants.GOAL_POSITION.getSubtraction(ExampleAuto.position).direction()), Math.toDegrees(Math.atan2(Constants.GOAL_POSITION.z-Constants.CAMERA_POSITION.z,ExampleAuto.position.magnitude())));
+    targetingSystem.updateTarget(yaw, -yaw- Math.toDegrees(Constants.GOAL_POSITION.getSubtraction(ExampleAuto.position).direction2D()), Math.toDegrees(Math.atan2(Constants.GOAL_POSITION.z-Constants.CAMERA_POSITION.z,ExampleAuto.position.magnitude2D())));
   }
 
   @Override

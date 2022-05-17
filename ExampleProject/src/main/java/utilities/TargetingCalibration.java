@@ -1,50 +1,57 @@
 package utilities;
 
-import java.util.HashMap;
-
+/**
+ * A class for creating a calibration table for a shooter.
+ *
+ * @author Icarus Innovated
+ */
 public class TargetingCalibration
 {
     /**
-	 * The callibration data for the system. The key is the distance,
-	 * the vector is the time, velocity, and angle of the shot.
+	 * The callibration data for the system. x is distance,
+     * y is time, z is velocity, and a is angle.
 	 */
-	private final HashMap<Double, CartesianVector> CALIBRATION_DATA;
+	private final CartesianVector[] CALIBRATION_DATA;
 
     /**
 	 * The interpolated data point for the current distance.
 	 */
     private CartesianVector lerpedPoint;
 
-    private double lowerDist;
-    private double upperDist;
-    private double distRange;
-    private double distPercent;
+    /**
+     * The smallest distance that was given in the input calibration.
+     */
+    private final double minCalibratedDist;
+
+    /**
+     * The largest distance that was given in the input calibration.
+     */
+    private final double maxCalibratedDist;
+
+    /**
+     * The data point directly below the target distance.
+     */
     private CartesianVector lowerData;
-    
-    public TargetingCalibration()
-    {
-        this.CALIBRATION_DATA = new HashMap<Double, CartesianVector>();
-    }
 
-    public TargetingCalibration(HashMap<Double, CartesianVector> CALIBRATION_DATA)
+    /**
+     * The data point directly above the target distance.
+     */
+    private CartesianVector upperData;
+
+    /**
+     * Creates a calibration table with the given data.
+     * 
+     * @param CALIBRATION_DATA A CartesianVector[] where x is distance,
+     *                         y is time, z is velocity, and a is angle.
+     */
+    public TargetingCalibration(CartesianVector[] CALIBRATION_DATA)
     {
+        this.lowerData = CALIBRATION_DATA[0];
+        this.minCalibratedDist = this.lowerData.x;
+        this.lerpedPoint = this.lowerData;
+        this.upperData = CALIBRATION_DATA[CALIBRATION_DATA.length - 1];
+        this.maxCalibratedDist = this.upperData.x;
         this.CALIBRATION_DATA = CALIBRATION_DATA;
-        upperDist = 0;
-        lowerDist = 99999;
-        for (double dist : this.CALIBRATION_DATA.keySet())
-        {
-            if (dist < lowerDist) {lowerDist = dist;}
-            if (dist > upperDist) {upperDist = dist;}
-        }
-        CartesianVector maxData = this.CALIBRATION_DATA.get(upperDist);
-        this.CALIBRATION_DATA.put(99999.0, maxData);
-        CartesianVector minData = this.CALIBRATION_DATA.get(lowerDist);
-        this.CALIBRATION_DATA.put(0.0, minData);
-    }
-
-    public void append(double distance, CartesianVector data)
-    {
-        CALIBRATION_DATA.put(distance, data);
     }
     
     /**
@@ -54,27 +61,34 @@ public class TargetingCalibration
 	 */
     public CartesianVector get(double distance)
     {
-        if (CALIBRATION_DATA.containsKey(distance))
+        if (distance > maxCalibratedDist || distance < minCalibratedDist)
         {
-            return CALIBRATION_DATA.get(distance);
+            return lerpedPoint;
         }
-        lowerDist = 0;
-        upperDist = 999999;
-        for (double dist : CALIBRATION_DATA.keySet())
+        double lowerDist = 0;
+        double upperDist = 1000;
+        for (CartesianVector dataPoint : CALIBRATION_DATA)
         {
+            double dist = dataPoint.x;
+            if (dist == distance)
+            {
+                return dataPoint;
+            }
             if (dist < distance && dist > lowerDist)
             {
                 lowerDist = dist;
+                lowerData.copy(dataPoint);
             }
-            if (dist > distance && dist < upperDist)
+            if (dist > distance)
             {
                 upperDist = dist;
+                upperData.copy(dataPoint);
+                break;
             }
         }
-        distRange = upperDist - lowerDist;
-        distPercent = (distance - lowerDist) / distRange;
-        lowerData = CALIBRATION_DATA.get(lowerDist);
-		lerpedPoint = CALIBRATION_DATA.get(upperDist).getSubtraction(lowerData);
+        double distRange = upperDist - lowerDist;
+        double distPercent = (distance - lowerDist) / distRange;
+		lerpedPoint = upperData.getSubtraction(lowerData);
 		lerpedPoint.multiply(distPercent);
         lerpedPoint.add(lowerData);
         return lerpedPoint;
