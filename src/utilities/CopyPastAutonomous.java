@@ -41,27 +41,27 @@ public class CopyPastAutonomous
 	/**
 	 * The position of the robot in 2D space.
 	 */
-	private CartesianVector position;
+	public CartesianVector position;
 
 	/**
 	 * The speed of the robot in 2D space.
 	 */
-	private CartesianVector velocity;
+	public CartesianVector velocity;
 
 	/**
 	 * The robot's target in 2D space.
 	 */
-	private CartesianVector target;
+	public CartesianVector target;
 
 	/**
 	 * The difference between the robot's target and its position.
 	 */
-	private CartesianVector positionError;
+	public CartesianVector positionError;
 
 	/**
 	 * The direction the waypoint is in from the current position.
 	 */
-	private double directionToWaypoint;
+	public double directionToWaypoint;
 
 	/**
 	 * The wrapped direction, which represents the shortest direction to steer.
@@ -72,7 +72,7 @@ public class CopyPastAutonomous
 	 * The speed the robot will attempt to drive at, based on the distance to the
 	 * target.
 	 */
-	private double targetSpeed;
+	public double targetSpeed;
 
 	/**
 	 * The current position of the left and right encoders.
@@ -104,6 +104,11 @@ public class CopyPastAutonomous
 	private final double INCHES_PER_ROTATION;
 
 	/**
+	 * The maximum allowed distance between the robot and the target.
+	 */
+	private final double MAX_WAYPOINT_ERROR;
+
+	/**
 	 * A PID controller for computing the steering power.
 	 */
 	private final ConfigurablePID drivetrainHeadingPID;
@@ -121,7 +126,7 @@ public class CopyPastAutonomous
 	 * @param headingPIDConfig        A PIDConfiguration with settings for the heading controller.
 	 * @param speedPIDConfig          A PIDConfiguration with settings for the speed controller.
 	 */
-	public CopyPastAutonomous(int encoderUnitsPerRotation, double inchesPerRotation, PIDConfiguration headingPIDConfig, PIDConfiguration speedPIDConfig)
+	public CopyPastAutonomous(double maxError, int encoderUnitsPerRotation, double inchesPerRotation, PIDConfiguration headingPIDConfig, PIDConfiguration speedPIDConfig)
 	{
 		this.position = new CartesianVector(0, 0);
 		this.velocity = new CartesianVector(0, 0);
@@ -134,6 +139,7 @@ public class CopyPastAutonomous
 
 		this.ENCODER_UNITS_PER_ROTATION = encoderUnitsPerRotation;
 		this.INCHES_PER_ROTATION = inchesPerRotation;
+		this.MAX_WAYPOINT_ERROR = maxError;
 
 		this.drivetrainHeadingPID = new ConfigurablePID(headingPIDConfig);
 		this.drivetrainSpeedPID = new ConfigurablePID(speedPIDConfig);
@@ -163,7 +169,7 @@ public class CopyPastAutonomous
 		motorVelocities.multiply(INCHES_PER_ROTATION);
 		motorVelocities.average();
 
-		velocity.set((Math.cos(heading) * motorVelocities.average), (Math.sin(heading) * motorVelocities.average));
+		velocity.set((Math.cos(heading) * motorVelocities.average), (-Math.sin(heading) * motorVelocities.average));
 		position.add(velocity);
 	}
 
@@ -176,21 +182,23 @@ public class CopyPastAutonomous
 	public void updateTargetHeadingAndSpeed()
 	{
 		positionError = target.getSubtraction(position);
-
-		directionToWaypoint = Math.atan2(positionError.y, positionError.x);
-		directionWrap = (((directionToWaypoint - heading - Math.PI) % (Math.PI * 2)) + Math.PI);
-
-		targetSpeed = Math.cos(directionWrap) * positionError.magnitude();
-		drivePower = drivetrainSpeedPID.runPID(targetSpeed, motorVelocities.average);
-
-		targetHeading = directionToWaypoint;
-		if (reverse)
+		if (!hasReachedWaypoint())
 		{
-			targetHeading += Math.PI;
-		}
+			directionToWaypoint = -Math.atan2(positionError.y, positionError.x);
+			directionWrap = (((directionToWaypoint - heading - Math.PI) % (Math.PI * 2)) + Math.PI);
 
-		headingWrap = (((targetHeading - heading - Math.PI) % (Math.PI * 2)) + Math.PI);
-		steeringPower = drivetrainHeadingPID.runPID(headingWrap, 0);
+			targetSpeed = Math.pow(Math.cos(directionWrap),3) * positionError.magnitude();
+			drivePower = drivetrainSpeedPID.runPID(targetSpeed, motorVelocities.average);
+
+			targetHeading = directionToWaypoint;
+			if (reverse)
+			{
+				targetHeading += Math.PI;
+			}
+
+			headingWrap = (((heading - targetHeading - Math.PI) % (Math.PI * 2)) + Math.PI);
+			steeringPower = drivetrainHeadingPID.runPID(0, headingWrap);
+		}
 	}
 
 	/**
@@ -274,7 +282,7 @@ public class CopyPastAutonomous
 	 */
 	public boolean hasReachedWaypoint()
 	{
-		return Math.abs(positionError.magnitude()) < UtilitiyConstants.MAX_WAYPOINT_ERROR;
+		return Math.abs(positionError.magnitude()) < MAX_WAYPOINT_ERROR;
 	}
 
 	/**
@@ -286,7 +294,7 @@ public class CopyPastAutonomous
 	 */
 	public boolean isAtPoint(CartesianVector point)
 	{
-		return Math.abs(position.getSubtraction(point).magnitude()) < UtilitiyConstants.MAX_WAYPOINT_ERROR;
+		return Math.abs(position.getSubtraction(point).magnitude()) < MAX_WAYPOINT_ERROR;
 	}
 
 }

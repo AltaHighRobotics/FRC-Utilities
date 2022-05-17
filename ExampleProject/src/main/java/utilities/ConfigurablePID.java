@@ -220,7 +220,7 @@ public class ConfigurablePID
 		{
 			currentError = setpoint - processVariable;
 		}
-		if (Math.abs(currentError) < errorTolerance)
+		if (Math.abs(setpoint - processVariable) < errorTolerance)
 		{
 			resetValues();
 			return 0;
