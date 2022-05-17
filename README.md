@@ -1,4 +1,4 @@
-# FRC Utilities ![coverage](https://img.shields.io/badge/Build/Test-testing-yellow)
+# FRC Utilities ![Build/Test Tracking](https://img.shields.io/badge/Build/Test-testing-yellow)
 
 A custom addition to WPI Lib
 
@@ -16,17 +16,15 @@ Download the latest release from the Release side bar and copy the utilities fol
 
 ## Coordinate Finder
 
-Detailed installation instructions can be found [here](docs/MarkDown/CoordinateFinderInstallation.md). Instructions for use can be found at our website here.
+
 
 ## Use and Documentation
 
-Examples of how to use each class can be found in the [Example Project](ExampleProject/src/main/java/frc/robot), Java Documentation can be found at our website here, step by step instructions can also be found for
+- [Example Project](ExampleProject/src/main/java/frc/robot)
 
-- Configurable PID
+- [Java Docs](docs/HTML)
 
-- Autonomous
-
-- Targeting System
+- [Detailed, Step by Step Documentaion](docs/MarkDown/DetailedDocs.md)
 
 ## Help or report a bug
 
