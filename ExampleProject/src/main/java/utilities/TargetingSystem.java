@@ -1,7 +1,8 @@
 package utilities;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * A class for creating and tracking a target in 3D space. Also allows for
@@ -15,18 +16,18 @@ public class TargetingSystem
 	 * The callibration data for the system. The key is the distance,
 	 * the vector is the time, velocity, and angle of the shot.
 	 */
-	private final HashMap<Double, CartesianVector> CALIBRATION_DATA;
-
-	/**
+	private final TargetingCalibration CALIBRATION_DATA;
+	
+    /**
 	 * The interpolated data point for the current distance.
 	 */
-    public CartesianVector lerpedData = new CartesianVector(0, 0, 0);
+    private CartesianVector lerpedData;
 
 	/**
 	 * The current measured location of the target in 3D space, relative to the
 	 * robot.
 	 */
-	private CartesianVector position = new CartesianVector(0, 0, 0);
+	public CartesianVector position = new CartesianVector(0, 0, 0);
 
 	/**
 	 * The previous average location of the target.
@@ -205,7 +206,7 @@ public class TargetingSystem
 	 *                                  should be used in predictions
 	 */
 	public TargetingSystem(CartesianVector cameraPosition, double cameraElevationAngle, CartesianVector targetPosition,
-			HashMap<Double, CartesianVector> calibrationData, double velocityThreshold, int refreshThreshold,
+			TargetingCalibration calibrationData, double velocityThreshold, int refreshThreshold,
 			int maxMemory, int maxAccelerationPrediction)
 	{
 		this.CAMERA_POSITION = cameraPosition;
@@ -234,13 +235,13 @@ public class TargetingSystem
 	 * @param targetingAzimuth   The azimuth angle reported by the targeting camera (degrees).
 	 * @param targetingElevation The elevation angle reported by the targeting camera (degrees).
 	 */
-	public void updateTarget(double robotYaw, double targetingAzimuth,
+	public CartesianVector updateTarget(double robotYaw, double targetingAzimuth,
 			double targetingElevation)
 	{
 		if (targetingElevation != 0)
 		{
 			absoluteAzimuthToTarget = targetingAzimuth + robotYaw;
-			azimuthToTargetRadians = Math.toRadians(absoluteAzimuthToTarget);
+			azimuthToTargetRadians = -Math.toRadians(absoluteAzimuthToTarget);
 	
 			absoluteElevationToTarget = targetingElevation + CAMERA_ELEVATION_ANGLE;
 			elevationToTargetRadians = Math.toRadians(absoluteElevationToTarget);
@@ -286,10 +287,15 @@ public class TargetingSystem
 		predictedPosition.add(averageVelocity
 				.getAddition(averageAcceleration.getMultiplication(Math.min(age, maxAccelerationPrediction))));
 		distanceToPredictedTarget = predictedPosition.magnitude();
-		lerpData(distanceToPredictedTarget);
+		lerpedData = CALIBRATION_DATA.get(distanceToPredictedTarget);
+		SmartDashboard.putNumber("Lead Dist", distanceToPredictedTarget);
+		SmartDashboard.putNumber("Lead Time", lerpedData.x);
 		leadPosition = predictedPosition.getAddition(averageVelocity.getMultiplication(lerpedData.x));
 		distanceToPredictedTarget = leadPosition.magnitude();
-		lerpData(distanceToPredictedTarget);
+		lerpedData = CALIBRATION_DATA.get(distanceToPredictedTarget);
+		CartesianVector newVelocity = averageVelocity.getAddition(averageAcceleration.getMultiplication(Math.min(lerpedData.x,maxAccelerationPrediction)));
+		leadPosition = predictedPosition.getAddition(newVelocity.getMultiplication(lerpedData.x));
+		return lerpedData;
 	}
 
 	/**
@@ -333,31 +339,4 @@ public class TargetingSystem
 		}
 		return vectorList;
 	}
-
-	/**
-	 * Interpolates between calibration points by a distance.
-	 * 
-	 * @param targetDistance The distance to create an interpolated point at.
-	 */
-    public void lerpData(double targetDistance)
-    {
-        double lowerDist = 0;
-        double upperDist = 999999;
-        for (double dist : CALIBRATION_DATA.keySet())
-        {
-            if (dist < targetDistance && dist > lowerDist)
-            {
-                lowerDist = dist;
-            } else if (dist > targetDistance && dist < upperDist)
-            {
-                upperDist = dist;
-            }
-        }
-        double distRange = upperDist - lowerDist;
-        double distPercent = (targetDistance - lowerDist) / distRange;
-        CartesianVector lowerData = CALIBRATION_DATA.get(lowerDist);
-		lerpedData = CALIBRATION_DATA.get(upperDist).getSubtraction(lowerData);
-		lerpedData.multiply(distPercent);
-        lerpedData.getAddition(lowerData);
-    }
 }

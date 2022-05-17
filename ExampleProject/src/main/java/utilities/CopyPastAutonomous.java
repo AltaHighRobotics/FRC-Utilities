@@ -202,6 +202,20 @@ public class CopyPastAutonomous
 	}
 
 	/**
+	 * Updates the steering power to point at a waypoint.
+	 * 
+	 * @param waypoint The location on the field to point at.
+	 */
+	public boolean pointAtWaypoint(final CartesianVector waypoint)
+	{
+		positionError = waypoint.getSubtraction(position);
+		targetHeading = -Math.atan2(positionError.y, positionError.x);
+		headingWrap = (((heading - targetHeading - Math.PI) % (Math.PI * 2)) + Math.PI);
+		steeringPower = drivetrainHeadingPID.runPID(0, headingWrap);
+		return steeringPower < 0.1;
+	}
+
+	/**
 	 * Gets the desired steering power of the robot, to reach the target waypoint,
 	 * as of the last update.
 	 * 
