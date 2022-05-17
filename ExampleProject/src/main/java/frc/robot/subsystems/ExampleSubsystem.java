@@ -6,6 +6,8 @@ package frc.robot.subsystems;
 
 import java.util.ArrayList;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -14,16 +16,18 @@ import utilities.CopyPastAutonomous;
 
 public class ExampleSubsystem extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
-  private final CopyPastAutonomous ExampleAuto = new CopyPastAutonomous(2, 1, 1, Constants.ExamplePIDConfig, Constants.ExamplePIDConfig);
-  private final CartesianVector waypoint1 = new CartesianVector(150, 75);
-  private final CartesianVector waypoint2 = new CartesianVector(0, 75);
-  private final CartesianVector waypoint3 = new CartesianVector(-30, 30);
-  private final CartesianVector waypoint4 = new CartesianVector(-60, 75);
+  private final CopyPastAutonomous ExampleAuto = new CopyPastAutonomous(5, 1, 1, Constants.HeadingPIDConfig, Constants.SpeedPIDConfig);
+  private final CartesianVector waypoint1 = new CartesianVector(200, 0);
+  private final CartesianVector waypoint2 = new CartesianVector(200, 100);
+  private final CartesianVector waypoint3 = new CartesianVector(0, 0);
+  private final CartesianVector waypoint4 = new CartesianVector(-200, 0);
   private final ArrayList<CartesianVector> waypoints = new ArrayList<CartesianVector>();
+  private Rotation2d rotation = new Rotation2d();
   private int waypointIndex = 0;
   private double leftEncoder;
   private double rightEncoder;
   private double yaw;
+  private final Field2d m_field = new Field2d();
   public ExampleSubsystem() {
     ExampleAuto.setWaypoint(waypoint1);
     yaw = 0;
@@ -33,10 +37,13 @@ public class ExampleSubsystem extends SubsystemBase {
     this.waypoints.add(waypoint2);
     this.waypoints.add(waypoint3);
     this.waypoints.add(waypoint4);
+    SmartDashboard.putData("Field", m_field);
   }
 
   @Override
   public void periodic() {
+    rotation = Rotation2d.fromDegrees(yaw);
+    m_field.setRobotPose(ExampleAuto.position.x, ExampleAuto.position.y, rotation);
   }
 
   public void run(double n) {
@@ -48,13 +55,12 @@ public class ExampleSubsystem extends SubsystemBase {
       waypointIndex = Math.min(waypointIndex,3);
       ExampleAuto.setWaypoint(waypoints.get(waypointIndex));
     }
-    leftEncoder += ExampleAuto.getDrivePower()/10 + ExampleAuto.getSteeringPower()/10;
-    rightEncoder += ExampleAuto.getDrivePower()/10 - ExampleAuto.getSteeringPower()/10;
-    yaw = yaw + ExampleAuto.getSteeringPower()/3;
-    if (yaw > 180) {yaw = -360+yaw;}
-    if (yaw < -180) {yaw = 360+yaw;}
-    SmartDashboard.putNumber("Robot X", ExampleAuto.position.x);
-    SmartDashboard.putNumber("Robot Y", ExampleAuto.position.y);
+    leftEncoder += ExampleAuto.getDrivePower() + ExampleAuto.getSteeringPower()/10;
+    rightEncoder += ExampleAuto.getDrivePower() - ExampleAuto.getSteeringPower()/10;
+    yaw = yaw + ExampleAuto.getSteeringPower();
+    //if (yaw > 180) {yaw = -360+yaw;}
+    //if (yaw < -180) {yaw = 360+yaw;}
+    SmartDashboard.putNumber("Robot Speed", ExampleAuto.motorVelocities.average);
     SmartDashboard.putNumber("Target X", ExampleAuto.target.x);
     SmartDashboard.putNumber("Target Y", ExampleAuto.target.y);
     SmartDashboard.putNumber("Target Angle", Math.toDegrees(ExampleAuto.directionToWaypoint));
@@ -65,6 +71,7 @@ public class ExampleSubsystem extends SubsystemBase {
 
   @Override
   public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
+    rotation = Rotation2d.fromDegrees(-yaw);
+    m_field.setRobotPose(ExampleAuto.position.x/39.37+15.980/2, ExampleAuto.position.y/39.37+8.210/2, rotation);
   }
 }

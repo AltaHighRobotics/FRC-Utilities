@@ -16,5 +16,6 @@ import utilities.PIDConfiguration;
  */
 public final class Constants 
 {
-    public static final PIDConfiguration ExamplePIDConfig = new PIDConfiguration(0.5, 0.1, 0, 1, 0, 0, 0, -0.3, 0.3, 0, 0, -2, 2);
+    public static final PIDConfiguration HeadingPIDConfig = new PIDConfiguration(1, 0.1, 0, 2, 0, 0, 0, -0.05, 0.05, 0, 0, -1, 1);
+    public static final PIDConfiguration SpeedPIDConfig = new PIDConfiguration(0.2, 0.1, 0, 0, 0, 0, 0, -0.1, 0.1, 0, 0, -1, 1);
 }

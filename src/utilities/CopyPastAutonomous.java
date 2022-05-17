@@ -87,7 +87,7 @@ public class CopyPastAutonomous
 	/**
 	 * The difference between the current and previous encoder positions.
 	 */
-	private CartesianVector motorVelocities;
+	public CartesianVector motorVelocities;
 
 	/**
 	 * The ratio between drive encoder units and full rotations of the drive motor.
@@ -187,7 +187,7 @@ public class CopyPastAutonomous
 			directionToWaypoint = -Math.atan2(positionError.y, positionError.x);
 			directionWrap = (((directionToWaypoint - heading - Math.PI) % (Math.PI * 2)) + Math.PI);
 
-			targetSpeed = Math.pow(Math.cos(directionWrap),3) * positionError.magnitude();
+			targetSpeed = Math.pow(Math.cos(directionWrap),7) * Math.sqrt(positionError.magnitude());
 			drivePower = drivetrainSpeedPID.runPID(targetSpeed, motorVelocities.average);
 
 			targetHeading = directionToWaypoint;
