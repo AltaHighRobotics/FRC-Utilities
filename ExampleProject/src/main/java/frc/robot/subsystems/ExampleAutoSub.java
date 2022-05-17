@@ -9,12 +9,12 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import utilities.AutonomousRobot;
+import utilities.CopyPastAutonomous;
 import utilities.TargetingSystem;
 
 public class ExampleAutoSub extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
-  public final AutonomousRobot ExampleAuto = new AutonomousRobot(1, 1, 1, Constants.HEADING_PID_CONFIG, Constants.DRIVE_PID_CONFIG);
+  public final CopyPastAutonomous ExampleAuto = new CopyPastAutonomous(1, 1, 1, Constants.HEADING_PID_CONFIG, Constants.DRIVE_PID_CONFIG);
   private final TargetingSystem targetingSystem = new TargetingSystem(Constants.CAMERA_POSITION, 0, Constants.GOAL_POSITION, Constants.SHOOTER_CALIBRATION, 0.05, 100, 30, 7);
   private Rotation2d rotation = new Rotation2d();
   private int waypointIndex;
