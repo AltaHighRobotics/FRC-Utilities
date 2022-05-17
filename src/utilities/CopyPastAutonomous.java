@@ -19,11 +19,6 @@ public class CopyPastAutonomous
 	private double steeringPower;
 
 	/**
-	 * The current direction of the robot, in radians.
-	 */
-	private double heading;
-
-	/**
 	 * The direction the robot should attempt to face.
 	 */
 	private double targetHeading;
@@ -39,7 +34,7 @@ public class CopyPastAutonomous
 	private boolean reverse;
 
 	/**
-	 * The position of the robot in 2D space.
+	 * The position and rotation of the robot in 3D space.
 	 */
 	public CartesianVector position;
 
@@ -128,7 +123,7 @@ public class CopyPastAutonomous
 	 */
 	public CopyPastAutonomous(double maxError, int encoderUnitsPerRotation, double inchesPerRotation, PIDConfiguration headingPIDConfig, PIDConfiguration speedPIDConfig)
 	{
-		this.position = new CartesianVector(0, 0);
+		this.position = new CartesianVector(0, 0, 0, 0, 0, 0);
 		this.velocity = new CartesianVector(0, 0);
 		this.target = new CartesianVector(0, 0);
 		this.positionError = new CartesianVector(0, 0);
@@ -153,14 +148,20 @@ public class CopyPastAutonomous
 	 *                             robot.
 	 * @param rightMotorEncoderPos The raw encoder value of the right side of the
 	 *                             robot.
+	 * @param pitch                The pitch angle of the robot, in degrees, as
+	 *                             measured by an IMU.
+	 * @param roll                 The roll angle of the robot, in degrees, as
+	 *                             measured by an IMU.
 	 * @param yaw                  The compass heading of the robot, in degrees, as
 	 *                             measured by an IMU.
 	 */
-	public void updateRobotPositon(double leftMotorEncoderPos, double rightMotorEncoderPos, double yaw)
+	public void updateRobotPositon(double leftMotorEncoderPos, double rightMotorEncoderPos, double pitch, double roll, double yaw)
 	{
 		drivePower = 0;
 		steeringPower = 0;
-		heading = Math.toRadians(yaw);
+		position.a = Math.toRadians(pitch);
+		position.b = Math.toRadians(roll);
+		position.c = Math.toRadians(yaw);
 
 		currentMotorPositions.set(leftMotorEncoderPos / ENCODER_UNITS_PER_ROTATION,
 				rightMotorEncoderPos / ENCODER_UNITS_PER_ROTATION);
@@ -169,7 +170,7 @@ public class CopyPastAutonomous
 		motorVelocities.multiply(INCHES_PER_ROTATION);
 		motorVelocities.average();
 
-		velocity.set((Math.cos(heading) * motorVelocities.average), (-Math.sin(heading) * motorVelocities.average));
+		velocity.set((Math.cos(position.c) * motorVelocities.average), (-Math.sin(position.c) * motorVelocities.average));
 		position.add(velocity);
 	}
 
@@ -185,9 +186,9 @@ public class CopyPastAutonomous
 		if (!hasReachedWaypoint())
 		{
 			directionToWaypoint = -Math.atan2(positionError.y, positionError.x);
-			directionWrap = (((directionToWaypoint - heading - Math.PI) % (Math.PI * 2)) + Math.PI);
+			directionWrap = (((directionToWaypoint - position.c - Math.PI) % (Math.PI * 2)) + Math.PI);
 
-			targetSpeed = Math.pow(Math.cos(directionWrap),7) * Math.sqrt(positionError.magnitude());
+			targetSpeed = Math.pow(Math.cos(directionWrap),7) * Math.sqrt(positionError.magnitude2D());
 			drivePower = drivetrainSpeedPID.runPID(targetSpeed, motorVelocities.average);
 
 			targetHeading = directionToWaypoint;
@@ -196,7 +197,7 @@ public class CopyPastAutonomous
 				targetHeading += Math.PI;
 			}
 
-			headingWrap = (((heading - targetHeading - Math.PI) % (Math.PI * 2)) + Math.PI);
+			headingWrap = (((position.c - targetHeading - Math.PI) % (Math.PI * 2)) + Math.PI);
 			steeringPower = drivetrainHeadingPID.runPID(0, headingWrap);
 		}
 	}
@@ -210,7 +211,7 @@ public class CopyPastAutonomous
 	{
 		positionError = waypoint.getSubtraction(position);
 		targetHeading = -Math.atan2(positionError.y, positionError.x);
-		headingWrap = (((heading - targetHeading - Math.PI) % (Math.PI * 2)) + Math.PI);
+		headingWrap = (((position.c - targetHeading - Math.PI) % (Math.PI * 2)) + Math.PI);
 		steeringPower = drivetrainHeadingPID.runPID(0, headingWrap);
 		return steeringPower < 0.1;
 	}
@@ -243,8 +244,8 @@ public class CopyPastAutonomous
 	 * Sets the robots current position to a new value, erasing any previous
 	 * position tracking.
 	 * 
-	 * @param newPosition A 2D vector object, containing the desired x and y values
-	 *                    to set the position to.
+	 * @param newPosition A 6D vector object, containing the desired x, y, z,
+	 * 					  a, b, and c values to set the position to.
 	 */
 	public void setPosition(CartesianVector newPosition)
 	{
@@ -296,7 +297,7 @@ public class CopyPastAutonomous
 	 */
 	public boolean hasReachedWaypoint()
 	{
-		return Math.abs(positionError.magnitude()) < MAX_WAYPOINT_ERROR;
+		return Math.abs(positionError.magnitude2D()) < MAX_WAYPOINT_ERROR;
 	}
 
 	/**
@@ -308,7 +309,7 @@ public class CopyPastAutonomous
 	 */
 	public boolean isAtPoint(CartesianVector point)
 	{
-		return Math.abs(position.getSubtraction(point).magnitude()) < MAX_WAYPOINT_ERROR;
+		return Math.abs(position.getSubtraction(point).magnitude2D()) < MAX_WAYPOINT_ERROR;
 	}
 
 }
