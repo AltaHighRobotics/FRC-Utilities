@@ -86,8 +86,8 @@ public class Panel extends JPanel
 
 	private void updatePosition(MouseEvent currentEvent)
 	{
-		xLabel.setText("x: " + currentEvent.getX());
-		yLabel.setText("y: " + currentEvent.getY());
+		xLabel.setText("x: " + (currentEvent.getX()/2.03448275862));
+		yLabel.setText("y: " + ((currentEvent.getY() - 100)/2.03448275862));
 	}
 
 	private void mouseDetails(String name, MouseEvent currentEvent)
