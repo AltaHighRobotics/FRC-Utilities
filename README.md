@@ -16,8 +16,6 @@ Download the latest release from the Release side bar and copy the utilities fol
 
 ## Coordinate Finder
 
-
-
 ## Use and Documentation
 
 - [Example Project](ExampleProject/src/main/java/frc/robot)

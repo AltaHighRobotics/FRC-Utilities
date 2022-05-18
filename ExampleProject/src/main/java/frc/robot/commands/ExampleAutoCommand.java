@@ -35,7 +35,7 @@ public class ExampleAutoCommand extends CommandBase {
   @Override
   public void execute() {
     m_subsystem.run();
-    m_targetingSystem.updateTarget(0, Math.toDegrees(m_subsystem.ExampleAuto.position.getSubtraction(Constants.GOAL_POSITION).direction()), 15);
+    m_targetingSystem.updateTarget(0, Math.toDegrees(m_subsystem.ExampleAuto.position.getSubtraction(Constants.GOAL_POSITION).direction2D()), 15);
     SmartDashboard.putNumber("Targeting X", m_targetingSystem.leadPosition.x);
   }
 
