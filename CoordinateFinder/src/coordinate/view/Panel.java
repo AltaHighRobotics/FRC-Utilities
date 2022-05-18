@@ -48,6 +48,7 @@ public class Panel extends JPanel
 	//724x1492
 	private void setupLayout()
 	{
+		layout_1.putConstraint(SpringLayout.WEST, xLabel, 20, SpringLayout.WEST, this);
 		layout_1.putConstraint(SpringLayout.SOUTH, yLabel, -6, SpringLayout.NORTH, imageLabel);
 		layout_1.putConstraint(SpringLayout.WEST, imageLabel, 0, SpringLayout.WEST, this);
 		layout_1.putConstraint(SpringLayout.SOUTH, imageLabel, 0, SpringLayout.SOUTH, this);
