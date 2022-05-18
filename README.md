@@ -16,6 +16,15 @@ Download the latest release from the Release side bar and copy the utilities fol
 
 ## Coordinate Finder
 
+### Installing
+
+### Use
+Coordinate Finder should not be used to get exact coordinates, it should be used as a guide to find the aproximate loacation of a coordinate.
+
+To use coordinate finder simply open up the application, and click on the field where the coordinate should be, the x and y coordinates should appear at the top left corner
+
+
+
 ## Use and Documentation
 
 - [Example Project](ExampleProject/src/main/java/frc/robot)
