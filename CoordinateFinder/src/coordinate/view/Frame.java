@@ -20,7 +20,7 @@ public class Frame  extends JFrame
 	private void setupFrame()
 	{
 		this.setTitle("Coordinate Finder");
-		this.setSize(1492,824);
+		this.setSize(649,419);
 		this.setContentPane(panel);
 		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

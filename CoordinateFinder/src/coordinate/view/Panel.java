@@ -34,7 +34,7 @@ public class Panel extends JPanel
 
 	private void setupPanel()
 	{
-		this.setPreferredSize(new Dimension(1492,824));
+		this.setPreferredSize(new Dimension(649,419));
 		this.add(xLabel);
 		this.imageLabel = new JLabel("");
 		this.add(imageLabel);
@@ -87,8 +87,8 @@ public class Panel extends JPanel
 
 	private void updatePosition(MouseEvent currentEvent)
 	{
-		xLabel.setText("x: " + (currentEvent.getX()/2.03448275862));
-		yLabel.setText("y: " + ((currentEvent.getY() - 100)/2.03448275862));
+		xLabel.setText("x: " + (currentEvent.getX()));
+		yLabel.setText("y: " + ((currentEvent.getY() - 100)));
 	}
 
 	private void mouseDetails(String name, MouseEvent currentEvent)
