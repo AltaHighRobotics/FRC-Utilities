@@ -320,14 +320,16 @@ public class TargetingSystem
 			CartesianVector total = vectorList.get(0).clone();
 			total.set(0, 0, 0);
 			int weight = 1;
+			int totalWeight = 0;
 			for (CartesianVector i : vectorList)
 			{
 				CartesianVector weightedVector = i.clone();
 				weightedVector.multiply(weight);
 				weight ++;
+				totalWeight += weight;
 				total.add(weightedVector);
 			}
-			total.divide(weight);
+			total.divide(totalWeight);
 			return total;
 		}
 		return new CartesianVector(0, 0, 0);
