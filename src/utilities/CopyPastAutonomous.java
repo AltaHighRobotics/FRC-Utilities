@@ -164,7 +164,10 @@ public class CopyPastAutonomous
 		steeringPower = 0;
 		position.a = Math.toRadians(pitch);
 		position.b = Math.toRadians(roll);
-		position.c = Math.toRadians(yaw);
+		double newHeading = Math.toRadians(yaw);
+		double headingRate = newHeading - position.c;
+		double predictedHeading = newHeading + headingRate;
+		position.c = Math.toRadians(newHeading);
 
 		currentMotorPositions.set(leftMotorEncoderPos / ENCODER_UNITS_PER_ROTATION,
 				rightMotorEncoderPos / ENCODER_UNITS_PER_ROTATION);
@@ -173,7 +176,7 @@ public class CopyPastAutonomous
 		motorVelocities.multiply(METERS_PER_ROTATION);
 		motorVelocities.average();
 
-		velocity.set((Math.cos(position.c) * motorVelocities.average), (-Math.sin(position.c) * motorVelocities.average));
+		velocity.set((Math.cos(predictedHeading) * motorVelocities.average), (-Math.sin(predictedHeading) * motorVelocities.average));
 		position.add(velocity);
 	}
 

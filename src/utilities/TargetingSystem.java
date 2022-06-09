@@ -71,6 +71,11 @@ public class TargetingSystem
 	private CartesianVector averageVelocity = new CartesianVector(0, 0, 0);
 
 	/**
+	 * The predicted velocity, used when the target is not seen.
+	 */
+	private CartesianVector predictedVelocity = new CartesianVector(0, 0, 0);
+
+	/**
 	 * The difference between the average velocity and the previous velocity.
 	 */
 	private CartesianVector acceleration = new CartesianVector(0, 0, 0);
@@ -262,17 +267,18 @@ public class TargetingSystem
 				accelerations.clear();
 			}
 			positions = manageList(positions, position, maxMemory);
-			averagePosition = avgVectorList(positions);
+			averagePosition = weightedAvgVectorList(positions);
 			predictedPosition.copy(averagePosition);
 			velocity = averagePosition.getSubtraction(previousPosition);
 			velocity.divide(age);
 			velocities = manageList(velocities, velocity, maxMemory);
-			averageVelocity = avgVectorList(velocities);
+			averageVelocity = weightedAvgVectorList(velocities);
+			predictedVelocity.copy(averageVelocity);
 			previousPosition.copy(averagePosition);
 			acceleration = averageVelocity.getSubtraction(previousVelocity);
 			acceleration.divide(age);
 			accelerations = manageList(accelerations, acceleration, maxMemory);
-			averageAcceleration = avgVectorList(accelerations);
+			averageAcceleration = weightedAvgVectorList(accelerations);
 			previousVelocity.copy(averageVelocity);
 			speed = averageVelocity.magnitude3D();
 			if (speed < velocityThreshold)
@@ -284,8 +290,11 @@ public class TargetingSystem
 		}
 		updated = false;
 		age = age + 1;
-		predictedPosition.add(averageVelocity
-				.getAddition(averageAcceleration.getMultiplication(Math.min(age, maxAccelerationPrediction))));
+		if (age <= maxAccelerationPrediction)
+		{
+			predictedVelocity.add(averageAcceleration);
+		}
+		predictedPosition.add(predictedVelocity);
 		distanceToPredictedTarget = predictedPosition.magnitude3D();
 		lerpedData = CALIBRATION_DATA.get(distanceToPredictedTarget);
 		SmartDashboard.putNumber("Lead Dist", distanceToPredictedTarget);
@@ -299,22 +308,26 @@ public class TargetingSystem
 	}
 
 	/**
-	 * Gets the average of a list of vectors
+	 * Gets the weighted average of a list of vectors
 	 * 
 	 * @param vectorList an ArrayList of vector objects
-	 * @return A vector representing the average value of the vectors in the list.
+	 * @return A vector representing the weighted average value of the vectors in the list.
 	 */
-	private CartesianVector avgVectorList(ArrayList<CartesianVector> vectorList)
+	private CartesianVector weightedAvgVectorList(ArrayList<CartesianVector> vectorList)
 	{
 		if (vectorList.size() >= 1)
 		{
 			CartesianVector total = vectorList.get(0).clone();
 			total.set(0, 0, 0);
+			int weight = 1;
 			for (CartesianVector i : vectorList)
 			{
-				total.add(i);
+				CartesianVector weightedVector = i.clone();
+				weightedVector.multiply(weight);
+				weight ++;
+				total.add(weightedVector);
 			}
-			total.divide(vectorList.size());
+			total.divide(weight);
 			return total;
 		}
 		return new CartesianVector(0, 0, 0);

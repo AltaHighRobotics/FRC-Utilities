@@ -162,8 +162,7 @@ public class CartesianVector
 	 * @param initialA A double representing the initial a value.
 	 * @param initialB A double representing the initial b value.
 	 * @param initialC A double representing the initial c value.
-	 * @return A vector with the same values as the inputs, and with the same type
-	 *         as the input (2D or 3D).
+	 * @return A vector with the same values and dimensions as the inputs.
 	 */
 	private CartesianVector vectorType(int forceDimension, double initialX, double initialY, double initialZ, double initialA, double initialB, double initialC)
 	{
